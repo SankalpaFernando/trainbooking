@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: railway_booking
     ports:
-      - "5433:5432"
+      - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./backend/prisma/init-extensions.sql:/docker-entrypoint-initdb.d/init-extensions.sql
@@ -37,7 +37,7 @@ services:
       dockerfile: Dockerfile
     container_name: train_booking_backend
     environment:
-      DATABASE_URL: "postgresql://postgres:postgres@db:5433/railway_booking?schema=public"
+      DATABASE_URL: "postgresql://postgres:postgres@db:5432/railway_booking?schema=public"
       REDIS_URL: "redis://redis:6379"
       PORT: 5001
       BASE_FARE: 100

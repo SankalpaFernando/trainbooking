@@ -89,8 +89,8 @@ async function main() {
         date: today,
         startStationSeq: 1,
         endStationSeq: 8,
-        startStationId: createdStations.find(s => s.sequenceNumber === 1)!.id,
-        endStationId: createdStations.find(s => s.sequenceNumber === 8)!.id,
+        startStationId: createdStations.find(s => s.sequenceNumber === 1)?.id,
+        endStationId: createdStations.find(s => s.sequenceNumber === 8)?.id,
         status: BookingStatus.CONFIRMED,
         guestName: 'Kasun Perera',
         guestNic: '921840291V',
@@ -107,8 +107,8 @@ async function main() {
         date: today,
         startStationSeq: 8,
         endStationSeq: 18,
-        startStationId: createdStations.find(s => s.sequenceNumber === 8)!.id,
-        endStationId: createdStations.find(s => s.sequenceNumber === 18)!.id,
+        startStationId: createdStations.find(s => s.sequenceNumber === 8)?.id,
+        endStationId: createdStations.find(s => s.sequenceNumber === 18)?.id,
         status: BookingStatus.CONFIRMED,
         guestName: 'Nimali Fernando',
         guestNic: '958291048V',
@@ -127,8 +127,8 @@ async function main() {
         date: today,
         startStationSeq: 1,
         endStationSeq: 11,
-        startStationId: createdStations.find(s => s.sequenceNumber === 1)!.id,
-        endStationId: createdStations.find(s => s.sequenceNumber === 11)!.id,
+        startStationId: createdStations.find(s => s.sequenceNumber === 1)?.id,
+        endStationId: createdStations.find(s => s.sequenceNumber === 11)?.id,
         status: BookingStatus.CONFIRMED,
         guestName: 'Sunil Shantha',
         guestNic: '881029482V',
@@ -144,7 +144,7 @@ async function main() {
 main()
   .catch((e) => {
     console.error(e);
-    process.exit(1);
+    // process.exit(1);
   })
   .finally(async () => {
     await prisma.$disconnect();

@@ -92,7 +92,7 @@ docker-compose up --build
 
 - **Frontend Application**: `http://localhost:3000`
 - **Backend API**: `http://localhost:5001`
-- **PostgreSQL Database**: `localhost:5433`
+- **PostgreSQL Database**: `localhost:5432`
 - **Redis Cache**: `localhost:6379`
 
 ---

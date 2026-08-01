@@ -9,7 +9,7 @@ npx prisma db push --accept-data-loss
 
 # Seed initial stations, coaches, seats, and demo bookings
 echo "Seeding database..."
-npx prisma db seed || true
+npx prisma db seed
 
 echo "Starting Express Server..."
 exec node dist/server.js
