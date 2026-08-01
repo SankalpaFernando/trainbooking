@@ -35,14 +35,18 @@ export class FareService {
     }
   }
 
-  public static calculateFare(input: FareCalculationInput): FareResult {
+  public static calculateFare(
+    input: FareCalculationInput,
+    options?: { excludeBaseFare?: boolean }
+  ): FareResult {
     const baseFare = this.getBaseFare();
     const ratePerStation = this.getPerStationRate();
     const stationsTraversed = Math.abs(input.endStationSeq - input.startStationSeq);
     const classMultiplier = this.getClassMultiplier(input.classType);
+    const includeBaseFare = !options?.excludeBaseFare;
 
-    const subtotal = baseFare + (stationsTraversed * ratePerStation);
-    const totalFare = Math.round(subtotal * classMultiplier * 100) / 100;
+    const subtotal = (includeBaseFare ? baseFare : 0) + (stationsTraversed * ratePerStation * classMultiplier);
+    const totalFare = Math.round(subtotal * 100) / 100;
 
     return {
       baseFare,

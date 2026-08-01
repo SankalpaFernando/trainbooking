@@ -19,6 +19,12 @@ export interface MixedTicketRecommendation {
   legs: LegOption[];
 }
 
+interface CandidateLeg {
+  seat: SeatGapSummary;
+  startSeq: number;
+  endSeq: number;
+}
+
 export class GapFinderService {
   /**
    * Generates mixed-ticket multi-leg itinerary recommendations for a requested route [reqStart, reqEnd].
@@ -33,69 +39,124 @@ export class GapFinderService {
     // Filter only reserved seats
     const reservedSeats = seatSummaries.filter((s) => s.coachType === 'RESERVED');
 
-    const recommendations: MixedTicketRecommendation[] = [];
+    const candidateRoutes = this.buildMultiLegRoutes(reservedSeats, reqStart, reqEnd, 5);
+    if (candidateRoutes.length === 0) {
+      return [];
+    }
 
-    // Algorithm: Find 2-leg seat hop combinations that cover [reqStart, reqEnd]
-    for (let intermediateSeq = reqStart + 1; intermediateSeq < reqEnd; intermediateSeq++) {
-      // Find candidate seat for Leg 1: [reqStart, intermediateSeq]
-      const leg1Candidates = reservedSeats.filter((s) =>
-        s.availableGaps.some((gap) => gap.startSeq <= reqStart && gap.endSeq >= intermediateSeq)
-      );
+    const baseFare = FareService.calculateFare({ startStationSeq: reqStart, endStationSeq: reqEnd }).baseFare;
 
-      // Find candidate seat for Leg 2: [intermediateSeq, reqEnd]
-      const leg2Candidates = reservedSeats.filter((s) =>
-        s.availableGaps.some((gap) => gap.startSeq <= intermediateSeq && gap.endSeq >= reqEnd)
-      );
-
-      if (leg1Candidates.length > 0 && leg2Candidates.length > 0) {
-        // Pick top available candidate for leg 1 and leg 2 (prefer different seats to show hop)
-        const seat1 = leg1Candidates[0];
-        const seat2 = leg2Candidates.find((s) => s.seatId !== seat1.seatId) || leg2Candidates[0];
-
-        const fare1 = FareService.calculateFare({
-          startStationSeq: reqStart,
-          endStationSeq: intermediateSeq,
-          classType: seat1.classType as ClassType,
-        }).totalFare;
-
-        const fare2 = FareService.calculateFare({
-          startStationSeq: intermediateSeq,
-          endStationSeq: reqEnd,
-          classType: seat2.classType as ClassType,
-        }).totalFare;
-
-        recommendations.push({
-          totalLegs: 2,
-          totalFare: Math.round((fare1 + fare2) * 100) / 100,
-          legs: [
+    const recommendations = candidateRoutes
+      .map((route) => {
+        const legFares = route.map((leg) =>
+          FareService.calculateFare(
             {
-              seatId: seat1.seatId,
-              seatNumber: seat1.seatNumber,
-              coachId: seat1.coachId,
-              coachName: seat1.coachName,
-              classType: seat1.classType as ClassType,
-              startStationSeq: reqStart,
-              endStationSeq: intermediateSeq,
-              fare: fare1,
+              startStationSeq: leg.startSeq,
+              endStationSeq: leg.endSeq,
+              classType: leg.seat.classType as ClassType,
             },
-            {
-              seatId: seat2.seatId,
-              seatNumber: seat2.seatNumber,
-              coachId: seat2.coachId,
-              coachName: seat2.coachName,
-              classType: seat2.classType as ClassType,
-              startStationSeq: intermediateSeq,
-              endStationSeq: reqEnd,
-              fare: fare2,
-            },
-          ],
-        });
+            { excludeBaseFare: true }
+          ).totalFare
+        );
 
-        // Limit to 3 distinct multi-leg recommendations
-        if (recommendations.length >= 3) break;
+        const totalFare = Math.round((baseFare + legFares.reduce((sum, fare) => sum + fare, 0)) * 100) / 100;
+
+        return {
+          route,
+          totalFare,
+          legFares,
+        };
+      })
+      .sort((a, b) => {
+        if (a.totalFare !== b.totalFare) return a.totalFare - b.totalFare;
+        return a.route.length - b.route.length;
+      })
+      .slice(0, 3)
+      .map(({ route, totalFare, legFares }) => ({
+        totalLegs: route.length,
+        totalFare,
+        legs: route.map((leg, index) => ({
+          seatId: leg.seat.seatId,
+          seatNumber: leg.seat.seatNumber,
+          coachId: leg.seat.coachId,
+          coachName: leg.seat.coachName,
+          classType: leg.seat.classType as ClassType,
+          startStationSeq: leg.startSeq,
+          endStationSeq: leg.endSeq,
+          fare: legFares[index],
+        })),
+      }));
+
+    return recommendations;
+  }
+
+  private static buildMultiLegRoutes(
+    reservedSeats: SeatGapSummary[],
+    reqStart: number,
+    reqEnd: number,
+    maxLegs: number
+  ): CandidateLeg[][] {
+    const transferPoints = new Set<number>([reqStart, reqEnd]);
+
+    for (const seat of reservedSeats) {
+      for (const gap of seat.availableGaps) {
+        if (gap.endSeq <= reqStart || gap.startSeq >= reqEnd) continue;
+        transferPoints.add(Math.max(reqStart, gap.startSeq));
+        transferPoints.add(Math.min(reqEnd, gap.endSeq));
       }
     }
 
-    return recommendations;
+    const sortedPoints = Array.from(transferPoints).sort((a, b) => a - b);
+    const routes: CandidateLeg[][] = [];
+    const maxRoutes = 30;
+
+    const dfs = (currentSeq: number, route: CandidateLeg[]) => {
+      if (route.length > maxLegs) {
+        return;
+      }
+
+      if (currentSeq === reqEnd) {
+        if (route.length >= 2) {
+          routes.push([...route]);
+        }
+        return;
+      }
+
+      if (route.length === maxLegs) {
+        return;
+      }
+
+      for (const seat of reservedSeats) {
+        for (const gap of seat.availableGaps) {
+          if (gap.startSeq <= currentSeq && gap.endSeq > currentSeq) {
+            const maxEnd = Math.min(gap.endSeq, reqEnd);
+            for (const nextPoint of sortedPoints) {
+              if (nextPoint <= currentSeq || nextPoint > maxEnd) {
+                continue;
+              }
+
+              route.push({ seat, startSeq: currentSeq, endSeq: nextPoint });
+              dfs(nextPoint, route);
+              route.pop();
+
+              if (routes.length >= maxRoutes) {
+                return;
+              }
+            }
+          }
+
+          if (routes.length >= maxRoutes) {
+            return;
+          }
+        }
+
+        if (routes.length >= maxRoutes) {
+          return;
+        }
+      }
+    };
+
+    dfs(reqStart, []);
+    return routes;
   }
 }
