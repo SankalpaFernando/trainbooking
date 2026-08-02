@@ -35,6 +35,12 @@ const COACHES = [
 ];
 
 async function main() {
+  const stationCount = await prisma.station.count();
+  if (stationCount > 0) {
+    console.log('Database already contains data. Skipping seed.');
+    return;
+  }
+
   console.log('Seeding Sri Lanka Railway Colombo Fort - Badulla line...');
 
   // 1. Seed Stations
