@@ -1,4 +1,6 @@
 
+version: '3.8'
+
 services:
   db:
     image: postgres:16-alpine
@@ -44,6 +46,9 @@ services:
       BASE_FARE: 100
       PER_STATION_RATE: 50
       HOLD_TTL_SECONDS: 300
+      OTEL_SERVICE_NAME: railway-booking-backend
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4318/v1/traces
+      LOKI_URL: http://loki:3100
     ports:
       - "5001:5001"
     volumes:
@@ -56,6 +61,12 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      prometheus:
+        condition: service_started
+      tempo:
+        condition: service_started
+      loki:
+        condition: service_started
 
   frontend:
     image: node:20-alpine
@@ -73,6 +84,54 @@ services:
     depends_on:
       - backend
 
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: train_booking_prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: train_booking_grafana
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    environment:
+      GF_DASHBOARDS_JSON_ENABLED: "true"
+      GF_PATHS_PROVISIONING: /etc/grafana/provisioning
+    depends_on:
+      - prometheus
+
+  loki:
+    image: grafana/loki:3.5.0
+    container_name: train_booking_loki
+    ports:
+      - "3100:3100"
+    command:
+      - -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./loki-local-config.yaml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+
+  tempo:
+    image: grafana/tempo:latest
+    container_name: train_booking_tempo
+    ports:
+      - "4318:4318"
+    command:
+      - -config.file=/etc/tempo/local-config.yaml
+    volumes:
+      - ./tempo-local-config.yaml:/etc/tempo/local-config.yaml:ro
+
 volumes:
   pgdata:
   redisdata:
+  grafana_data:
+  loki_data:

@@ -1,6 +1,7 @@
 import { SegmentService, SeatGapSummary } from './segmentService';
 import { FareService } from './fareService';
 import { ClassType } from '@prisma/client';
+import { trace } from '@opentelemetry/api';
 
 export interface LegOption {
   seatId: number;
@@ -34,63 +35,68 @@ export class GapFinderService {
     reqStart: number,
     reqEnd: number
   ): Promise<MixedTicketRecommendation[]> {
-    const seatSummaries = await SegmentService.getSeatsAvailability(date, reqStart, reqEnd);
+    const activeSpan = trace.getTracer('railway-booking').startSpan('gap_finder.calculate_hops');
+    try {
+      const seatSummaries = await SegmentService.getSeatsAvailability(date, reqStart, reqEnd);
 
-    // Use any seat with availability inside the requested route window so the recommendation
-    // can mix classes (first, second, third) and fill the gaps between reqStart and reqEnd.
-    const candidateSeats = seatSummaries.filter((s) =>
-      s.availableGaps.some((gap) => gap.endSeq > reqStart && gap.startSeq < reqEnd)
-    );
+      // Use any seat with availability inside the requested route window so the recommendation
+      // can mix classes (first, second, third) and fill the gaps between reqStart and reqEnd.
+      const candidateSeats = seatSummaries.filter((s) =>
+        s.availableGaps.some((gap) => gap.endSeq > reqStart && gap.startSeq < reqEnd)
+      );
 
-    const candidateRoutes = this.buildMultiLegRoutes(candidateSeats, reqStart, reqEnd, 5);
-    if (candidateRoutes.length === 0) {
-      return [];
-    }
+      const candidateRoutes = this.buildMultiLegRoutes(candidateSeats, reqStart, reqEnd, 5);
+      if (candidateRoutes.length === 0) {
+        return [];
+      }
 
-    const baseFare = FareService.calculateFare({ startStationSeq: reqStart, endStationSeq: reqEnd }).baseFare;
+      const baseFare = FareService.calculateFare({ startStationSeq: reqStart, endStationSeq: reqEnd }).baseFare;
 
-    const recommendations = candidateRoutes
-      .map((route) => {
-        const legFares = route.map((leg) =>
-          FareService.calculateFare(
-            {
-              startStationSeq: leg.startSeq,
-              endStationSeq: leg.endSeq,
-              classType: leg.seat.classType as ClassType,
-            },
-            { excludeBaseFare: true }
-          ).totalFare
-        );
+      const recommendations = candidateRoutes
+        .map((route) => {
+          const legFares = route.map((leg) =>
+            FareService.calculateFare(
+              {
+                startStationSeq: leg.startSeq,
+                endStationSeq: leg.endSeq,
+                classType: leg.seat.classType as ClassType,
+              },
+              { excludeBaseFare: true }
+            ).totalFare
+          );
 
-        const totalFare = Math.round((baseFare + legFares.reduce((sum, fare) => sum + fare, 0)) * 100) / 100;
+          const totalFare = Math.round((baseFare + legFares.reduce((sum, fare) => sum + fare, 0)) * 100) / 100;
 
-        return {
-          route,
+          return {
+            route,
+            totalFare,
+            legFares,
+          };
+        })
+        .sort((a, b) => {
+          if (a.totalFare !== b.totalFare) return a.totalFare - b.totalFare;
+          return a.route.length - b.route.length;
+        })
+        .slice(0, 3)
+        .map(({ route, totalFare, legFares }) => ({
+          totalLegs: route.length,
           totalFare,
-          legFares,
-        };
-      })
-      .sort((a, b) => {
-        if (a.totalFare !== b.totalFare) return a.totalFare - b.totalFare;
-        return a.route.length - b.route.length;
-      })
-      .slice(0, 3)
-      .map(({ route, totalFare, legFares }) => ({
-        totalLegs: route.length,
-        totalFare,
-        legs: route.map((leg, index) => ({
-          seatId: leg.seat.seatId,
-          seatNumber: leg.seat.seatNumber,
-          coachId: leg.seat.coachId,
-          coachName: leg.seat.coachName,
-          classType: leg.seat.classType as ClassType,
-          startStationSeq: leg.startSeq,
-          endStationSeq: leg.endSeq,
-          fare: legFares[index],
-        })),
-      }));
+          legs: route.map((leg, index) => ({
+            seatId: leg.seat.seatId,
+            seatNumber: leg.seat.seatNumber,
+            coachId: leg.seat.coachId,
+            coachName: leg.seat.coachName,
+            classType: leg.seat.classType as ClassType,
+            startStationSeq: leg.startSeq,
+            endStationSeq: leg.endSeq,
+            fare: legFares[index],
+          })),
+        }));
 
-    return recommendations;
+      return recommendations;
+    } finally {
+      activeSpan.end();
+    }
   }
 
   private static buildMultiLegRoutes(

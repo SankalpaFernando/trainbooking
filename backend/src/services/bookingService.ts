@@ -3,6 +3,8 @@ import { SegmentService } from './segmentService';
 import { FareService } from './fareService';
 import { BookingStatus } from '@prisma/client';
 import crypto from 'crypto';
+import { trace } from '@opentelemetry/api';
+import { logger, bookingStatusCounter, lockAcquisitionHistogram } from './observability';
 
 export interface CreateBookingDTO {
   seatId: number;
@@ -43,11 +45,20 @@ export class BookingService {
    * Attempts to reserve seat hold for passenger with Redis Distributed Lock & GiST Constraint safety.
    */
   public static async createHoldBooking(dto: CreateBookingDTO) {
+    const span = trace.getTracer('railway-booking').startSpan('seat.lock_acquisition');
     const lockKey = `lock:seat:${dto.seatId}:${dto.date}`;
-    
+    const start = process.hrtime();
+
     const acquired = await redis.set(lockKey, 'LOCKED', 'EX', 5, 'NX');
 
+    const [seconds, nanoseconds] = process.hrtime(start);
+    const durationSeconds = seconds + nanoseconds / 1e9;
+    lockAcquisitionHistogram.observe(durationSeconds);
+    span.end();
+
     if (!acquired) {
+      bookingStatusCounter.inc({ status: 'conflict_rejected' });
+      logger.warn({ seatId: dto.seatId, date: dto.date }, 'Failed to acquire seat lock');
       throw new Error('Seat lock conflict: another transaction is processing this seat. Please try again.');
     }
 
@@ -66,6 +77,7 @@ export class BookingService {
       }
 
       // 2. Overlap Check against active bookings
+      const overlapSpan = trace.getTracer('railway-booking').startSpan('seat.gist_exclusion_check');
       const existingOverlaps = await prisma.booking.findMany({
         where: {
           seatId: dto.seatId,
@@ -73,6 +85,7 @@ export class BookingService {
           status: { in: [BookingStatus.PENDING, BookingStatus.CONFIRMED] },
         },
       });
+      overlapSpan.end();
 
       const isOverlapping = existingOverlaps.some((b) =>
         SegmentService.isOverlapping(
@@ -121,8 +134,11 @@ export class BookingService {
         },
       });
 
+      bookingStatusCounter.inc({ status: 'pending_hold' });
+      logger.info({ pnr: booking.pnr, status: booking.status }, 'Created pending hold booking');
+
       // 5. Rebuild CQRS Cache in background
-      SegmentService.rebuildAndCacheSeatsAvailability(dto.date).catch(console.error);
+      SegmentService.rebuildAndCacheSeatsAvailability(dto.date).catch((err) => logger.warn({ err }, 'Failed to rebuild CQRS cache'));
 
       return booking;
     } finally {
@@ -166,7 +182,9 @@ export class BookingService {
       },
     });
 
-    SegmentService.rebuildAndCacheSeatsAvailability(booking.date).catch(console.error);
+    bookingStatusCounter.inc({ status: 'confirmed' });
+    logger.info({ pnr: confirmed.pnr, status: confirmed.status }, 'Booking confirmed');
+    SegmentService.rebuildAndCacheSeatsAvailability(booking.date).catch((err) => logger.warn({ err }, 'Failed to rebuild CQRS cache'));
 
     return confirmed;
   }
@@ -285,7 +303,9 @@ export class BookingService {
         return created;
       });
 
-      SegmentService.rebuildAndCacheSeatsAvailability(dto.date).catch(console.error);
+      bookingStatusCounter.inc({ status: 'pending_hold' }, bookings.length);
+      logger.info({ count: bookings.length, date: dto.date }, 'Created multi-leg pending hold booking');
+      SegmentService.rebuildAndCacheSeatsAvailability(dto.date).catch((err) => logger.warn({ err }, 'Failed to rebuild CQRS cache'));
       return bookings;
     } finally {
       await this.asyncReleaseSeatLocks(acquiredLocks);
@@ -351,7 +371,8 @@ export class BookingService {
     });
 
     if (expired.count > 0) {
-      console.log(`Auto-expired ${expired.count} pending hold reservations.`);
+      bookingStatusCounter.inc({ status: 'expired' }, expired.count);
+      logger.info({ count: expired.count }, 'Auto-expired pending hold reservations');
     }
   }
 }

@@ -1,5 +1,6 @@
 import { prisma, redis } from './db';
 import { BookingStatus } from '@prisma/client';
+import { cacheHitsCounter, cacheMissesCounter, occupancyRatioGauge } from './observability';
 
 export interface Interval {
   startSeq: number;
@@ -88,6 +89,7 @@ export class SegmentService {
     let summaries: SeatGapSummary[];
 
     if (cachedData) {
+      cacheHitsCounter.inc();
       const allSummaries: SeatGapSummary[] = JSON.parse(cachedData);
       summaries = allSummaries.map((s) => ({
         ...s,
@@ -96,8 +98,14 @@ export class SegmentService {
         ),
       }));
     } else {
-      // Fetch from Database
+      cacheMissesCounter.inc();
       summaries = await this.rebuildAndCacheSeatsAvailability(date, reqStart, reqEnd);
+    }
+
+    const totalSeats = summaries.length;
+    if (totalSeats > 0) {
+      const unavailableSeats = summaries.filter((s) => !s.isAvailableForRequestedLeg).length;
+      occupancyRatioGauge.set({ start_station: String(reqStart), end_station: String(reqEnd) }, unavailableSeats / totalSeats);
     }
 
     if (coachIdFilter) {

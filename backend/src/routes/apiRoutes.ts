@@ -1,7 +1,30 @@
 import { Router } from 'express';
 import { ApiControllers } from '../controllers/apiControllers';
+import { requestDurationHistogram } from '../services/observability';
 
 const router = Router();
+
+router.use((req, res, next) => {
+  const startTime = Date.now();
+  res.on('finish', () => {
+    const durationMs = Date.now() - startTime;
+    requestDurationHistogram.observe(
+      {
+        method: req.method,
+        route: req.originalUrl,
+        status: String(res.statusCode),
+      },
+      durationMs / 1000
+    );
+    (req as any).log.info({
+      method: req.method,
+      url: req.originalUrl,
+      statusCode: res.statusCode,
+      durationMs,
+    }, 'API request completed');
+  });
+  next();
+});
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || '';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';

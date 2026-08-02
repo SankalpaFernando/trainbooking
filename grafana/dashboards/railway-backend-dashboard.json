@@ -1,0 +1,54 @@
+{
+  "id": null,
+  "title": "Railway Booking Backend",
+  "tags": ["railway", "backend", "observability"],
+  "timezone": "browser",
+  "schemaVersion": 36,
+  "version": 0,
+  "panels": [
+    {
+      "type": "graph",
+      "title": "API Request Duration",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(railway_api_request_duration_seconds_bucket[5m])) by (le, method, route, status))",
+          "legendFormat": "{{method}} {{route}} {{status}}"
+        }
+      ],
+      "gridPos": {"x": 0, "y": 0, "w": 12, "h": 9}
+    },
+    {
+      "type": "graph",
+      "title": "Bookings by Status",
+      "targets": [
+        {
+          "expr": "sum(rate(railway_seat_bookings_total[5m])) by (status)",
+          "legendFormat": "{{status}}"
+        }
+      ],
+      "gridPos": {"x": 12, "y": 0, "w": 12, "h": 9}
+    },
+    {
+      "type": "graph",
+      "title": "CQRS Cache Hit Rate",
+      "targets": [
+        {
+          "expr": "sum(rate(railway_cqrs_cache_hits_total[5m])) / sum(rate(railway_cqrs_cache_hits_total[5m]) + rate(railway_cqrs_cache_misses_total[5m]))",
+          "legendFormat": "cache hit rate"
+        }
+      ],
+      "gridPos": {"x": 0, "y": 9, "w": 12, "h": 9}
+    },
+    {
+      "type": "graph",
+      "title": "Lock Acquisition Duration",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(railway_lock_acquisition_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "95th percentile"
+        }
+      ],
+      "gridPos": {"x": 12, "y": 9, "w": 12, "h": 9}
+    }
+  ]
+}
