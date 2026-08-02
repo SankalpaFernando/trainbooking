@@ -1,8 +1,12 @@
+
 export class RecaptchaService {
-  private static readonly SECRET_KEY = process.env.RECAPTCHA_SECRET_KEY || '';
+  private static SECRET_KEY = process.env.RECAPTCHA_SECRET_KEY || '';
   private static readonly VERIFY_URL = 'https://www.google.com/recaptcha/api/siteverify';
 
   public static async verifyToken(token: string, remoteIp?: string) {
+
+    this.SECRET_KEY = process.env.RECAPTCHA_SECRET_KEY || '';
+
     if (!this.SECRET_KEY) {
       throw new Error('Recaptcha secret key is not configured');
     }
