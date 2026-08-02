@@ -36,10 +36,13 @@ export class GapFinderService {
   ): Promise<MixedTicketRecommendation[]> {
     const seatSummaries = await SegmentService.getSeatsAvailability(date, reqStart, reqEnd);
 
-    // Filter only reserved seats
-    const reservedSeats = seatSummaries.filter((s) => s.coachType === 'RESERVED');
+    // Use any seat with availability inside the requested route window so the recommendation
+    // can mix classes (first, second, third) and fill the gaps between reqStart and reqEnd.
+    const candidateSeats = seatSummaries.filter((s) =>
+      s.availableGaps.some((gap) => gap.endSeq > reqStart && gap.startSeq < reqEnd)
+    );
 
-    const candidateRoutes = this.buildMultiLegRoutes(reservedSeats, reqStart, reqEnd, 5);
+    const candidateRoutes = this.buildMultiLegRoutes(candidateSeats, reqStart, reqEnd, 5);
     if (candidateRoutes.length === 0) {
       return [];
     }
@@ -108,18 +111,25 @@ export class GapFinderService {
 
     const sortedPoints = Array.from(transferPoints).sort((a, b) => a - b);
     const routes: CandidateLeg[][] = [];
+    const routeKeys = new Set<string>();
     const maxRoutes = 30;
+
+    const addRoute = (route: CandidateLeg[]) => {
+      if (route.length === 0) return;
+      const key = route.map((leg) => `${leg.seat.seatId}:${leg.startSeq}-${leg.endSeq}`).join('|');
+      if (!routeKeys.has(key)) {
+        routeKeys.add(key);
+        routes.push([...route]);
+      }
+    };
 
     const dfs = (currentSeq: number, route: CandidateLeg[]) => {
       if (route.length > maxLegs) {
         return;
       }
 
-      if (currentSeq === reqEnd) {
-        if (route.length >= 2) {
-          routes.push([...route]);
-        }
-        return;
+      if (route.length >= 1) {
+        addRoute(route);
       }
 
       if (route.length === maxLegs) {
@@ -156,7 +166,14 @@ export class GapFinderService {
       }
     };
 
-    dfs(reqStart, []);
+    for (const startPoint of sortedPoints) {
+      if (startPoint >= reqEnd) break;
+      dfs(startPoint, []);
+      if (routes.length >= maxRoutes) {
+        break;
+      }
+    }
+
     return routes;
   }
 }
