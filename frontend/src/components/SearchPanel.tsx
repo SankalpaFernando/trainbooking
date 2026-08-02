@@ -32,7 +32,7 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
   const distance = originStation && destStation ? Math.abs(destStation.distanceKm - originStation.distanceKm) : 0;
 
   return (
-    <div className="glass-card" style={{ padding: '24px', marginBottom: '24px' }}>
+    <div className="glass-card" style={{ padding: '24px', marginBottom: '24px',marginTop: '24px' }}>
       <h2 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent-cyan)' }}>
         <Navigation size={20} />
         Route & Segment Search
@@ -134,7 +134,7 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <DollarSign size={20} color="var(--accent-emerald)" />
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Estimated Fare:</span>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Minimum Estimated Fare:</span>
             <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--accent-emerald)' }}>
               LKR {fareEstimate.totalFare.toFixed(2)}
             </span>

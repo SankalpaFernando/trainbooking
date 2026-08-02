@@ -10,7 +10,7 @@ import { EReceiptModal } from './components/EReceiptModal';
 import { WaitlistModal } from './components/WaitlistModal';
 import { AdminDashboard } from './components/AdminDashboard';
 import { PNRLookup } from './components/PNRLookup';
-import { Train, ArrowRight } from 'lucide-react';
+import { Train, ArrowRight, Lock } from 'lucide-react';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'booking' | 'admin' | 'my-tickets'>('booking');
@@ -36,6 +36,17 @@ export const App: React.FC = () => {
   const [showReceiptModal, setShowReceiptModal] = useState<boolean>(false);
   const [showWaitlistModal, setShowWaitlistModal] = useState<boolean>(false);
   const [confirmedBooking, setConfirmedBooking] = useState<Booking | null>(null);
+  const [adminLoggedIn, setAdminLoggedIn] = useState<boolean>(false);
+  const [adminUsername, setAdminUsername] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [adminError, setAdminError] = useState('');
+
+  useEffect(() => {
+    const storedAuth = localStorage.getItem('adminAuth');
+    if (storedAuth) {
+      setAdminLoggedIn(true);
+    }
+  }, []);
 
   // 1. Initial Load: Fetch stations and coaches
   useEffect(() => {
@@ -115,6 +126,29 @@ export const App: React.FC = () => {
   const originStation = stations.find((s) => s.id === originId) || stations[0];
   const destStation = stations.find((s) => s.id === destinationId) || stations[7];
 
+  const handleAdminLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const username = adminUsername.trim();
+    const password = adminPassword;
+
+    try {
+      await ApiService.adminLogin(username, password);
+      setAdminLoggedIn(true);
+      setAdminError('');
+      setAdminPassword('');
+      setAdminUsername('');
+    } catch (err: any) {
+      setAdminError(err.message || 'Login failed');
+    }
+  };
+
+  const handleAdminLogout = () => {
+    localStorage.removeItem('adminAuth');
+    setAdminLoggedIn(false);
+    setAdminError('');
+    setActiveTab('booking');
+  };
+
   return (
     <div style={{ maxWidth: '1240px', margin: '0 auto', padding: '0 20px 60px 20px' }}>
       
@@ -166,7 +200,41 @@ export const App: React.FC = () => {
       {activeTab === 'my-tickets' && <PNRLookup />}
 
       {/* Department Admin Analytics Tab */}
-      {activeTab === 'admin' && <AdminDashboard date={date} />}
+      {activeTab === 'admin' && !adminLoggedIn ? (
+        <div className="glass-card" style={{ padding: '32px', maxWidth: '420px', margin: '24px auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+            <Lock size={20} color="var(--accent-cyan)" />
+            <h3 style={{ fontSize: '1rem', fontWeight: 700 }}>Admin Login</h3>
+          </div>
+          <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
+            Enter your admin credentials to access the dashboard.
+          </p>
+          <form onSubmit={handleAdminLogin} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <input
+              className="input-field"
+              placeholder="Username"
+              value={adminUsername}
+              onChange={(e) => setAdminUsername(e.target.value)}
+            />
+            <input
+              className="input-field"
+              type="password"
+              placeholder="Password"
+              value={adminPassword}
+              onChange={(e) => setAdminPassword(e.target.value)}
+            />
+            {adminError && <div style={{ color: '#f87171', fontSize: '0.8rem' }}>{adminError}</div>}
+            <button className="btn-primary" type="submit">Login</button>
+          </form>
+        </div>
+      ) : activeTab === 'admin' ? (
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px',marginTop:'16px' }}>
+            <button className="btn-secondary " onClick={handleAdminLogout}>Logout</button>
+          </div>
+          <AdminDashboard date={date} />
+        </div>
+      ) : null}
 
       {/* Checkout Modal */}
       {showCheckoutModal && selectedSeat && originStation && destStation && (

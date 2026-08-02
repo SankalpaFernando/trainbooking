@@ -9,7 +9,24 @@ import {
 
 const API_BASE = '/api';
 
+const getAuthHeaders = () => {
+  const auth = localStorage.getItem('adminAuth');
+  if (!auth) return {};
+  return { Authorization: auth };
+};
+
 export class ApiService {
+  public static async adminLogin(username: string, password: string): Promise<void> {
+    const res = await fetch(`${API_BASE}/admin/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error || 'Login failed');
+    localStorage.setItem('adminAuth', json.data.token);
+  }
+
   public static async getStations(): Promise<Station[]> {
     const res = await fetch(`${API_BASE}/stations`);
     const json = await res.json();
@@ -106,7 +123,9 @@ export class ApiService {
   }
 
   public static async getAdminAnalytics(date: string): Promise<DepartmentAnalytics> {
-    const res = await fetch(`${API_BASE}/admin/analytics?date=${date}`);
+    const res = await fetch(`${API_BASE}/admin/analytics?date=${date}`, {
+      headers: getAuthHeaders(),
+    });
     const json = await res.json();
     if (!json.success) throw new Error(json.error);
     return json.data;
@@ -121,7 +140,10 @@ export class ApiService {
   }) {
     const res = await fetch(`${API_BASE}/admin/coaches`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
       body: JSON.stringify(data),
     });
     const json = await res.json();

@@ -3,6 +3,32 @@ import { ApiControllers } from '../controllers/apiControllers';
 
 const router = Router();
 
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || '';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
+
+const requireAdminAuth = (req: any, res: any, next: any) => {
+  const authHeader = req.headers.authorization || '';
+  const expected = 'Basic ' + Buffer.from(`${ADMIN_USERNAME}:${ADMIN_PASSWORD}`).toString('base64');
+
+  if (authHeader === expected) {
+    return next();
+  }
+
+  res.setHeader('WWW-Authenticate', 'Basic realm="Admin"');
+  return res.status(401).json({ success: false, error: 'Unauthorized' });
+};
+
+router.post('/admin/login', (req: any, res: any) => {
+  const { username, password } = req.body || {};
+
+  if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+    const token = 'Basic ' + Buffer.from(`${ADMIN_USERNAME}:${ADMIN_PASSWORD}`).toString('base64');
+    return res.json({ success: true, data: { token } });
+  }
+
+  return res.status(401).json({ success: false, error: 'Invalid admin credentials' });
+});
+
 // Infrastructure & Master Data
 router.get('/stations', ApiControllers.getStations);
 router.get('/coaches', ApiControllers.getCoaches);
@@ -20,7 +46,7 @@ router.get('/bookings/lookup/:pnr', ApiControllers.lookupPNR);
 router.post('/waitlist', ApiControllers.addToWaitlist);
 
 // Department Admin Portal
-router.get('/admin/analytics', ApiControllers.getAdminAnalytics);
-router.post('/admin/coaches', ApiControllers.createCoach);
+router.get('/admin/analytics', requireAdminAuth, ApiControllers.getAdminAnalytics);
+router.post('/admin/coaches', requireAdminAuth, ApiControllers.createCoach);
 
 export default router;

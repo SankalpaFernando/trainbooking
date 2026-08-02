@@ -30,6 +30,14 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [holdBooking, setHoldBooking] = useState<Booking | null>(null);
   const [timeLeft, setTimeLeft] = useState<number>(300);
 
+  const getCoachFare = () => {
+    const baseFare = 100;
+    const ratePerStation = 50;
+    const stationsTraversed = Math.abs(destinationStation.sequenceNumber - originStation.sequenceNumber);
+    const multiplier = seat.classType === 'FIRST_CLASS' ? 1.5 : seat.classType === 'SECOND_CLASS' ? 1.2 : 1;
+    return Math.round((baseFare + stationsTraversed * ratePerStation * multiplier) * 100) / 100;
+  };
+
   useEffect(() => {
     let timer: ReturnType<typeof setInterval>;
     if (holdBooking) {
@@ -175,9 +183,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   Seat {seat.seatNumber} ({seat.coachName})
                 </span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.85rem' }}>
                 <span style={{ color: 'var(--text-muted)' }}>TRAVEL DATE:</span>
                 <span style={{ fontWeight: 700 }}>{date}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                <span style={{ color: 'var(--text-muted)' }}>FARE:</span>
+                <span style={{ fontWeight: 700, color: 'var(--accent-emerald)' }}>LKR {getCoachFare().toFixed(2)}</span>
               </div>
             </div>
 
