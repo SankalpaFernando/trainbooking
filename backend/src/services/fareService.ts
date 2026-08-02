@@ -43,9 +43,9 @@ export class FareService {
     const ratePerStation = this.getPerStationRate();
     const stationsTraversed = Math.abs(input.endStationSeq - input.startStationSeq);
     const classMultiplier = this.getClassMultiplier(input.classType);
-    const includeBaseFare = !options?.excludeBaseFare;
+    const excludeBaseFare = !options?.excludeBaseFare;
 
-    const subtotal = (includeBaseFare ? baseFare : 0) + (stationsTraversed * ratePerStation * classMultiplier);
+    const subtotal = (excludeBaseFare ? 0 : baseFare) + (stationsTraversed * ratePerStation * classMultiplier);
     const totalFare = Math.round(subtotal * 100) / 100;
 
     return {
