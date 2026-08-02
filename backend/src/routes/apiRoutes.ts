@@ -39,7 +39,9 @@ router.get('/seats/mixed-tickets', ApiControllers.getMixedTickets);
 
 // Booking Transactions & Holds
 router.post('/bookings/hold', ApiControllers.createHoldBooking);
+router.post('/bookings/hold-multi', ApiControllers.createHoldMultiBooking);
 router.post('/bookings/confirm', ApiControllers.confirmBooking);
+router.post('/bookings/confirm-multi', ApiControllers.confirmMultiBooking);
 router.get('/bookings/lookup/:pnr', ApiControllers.lookupPNR);
 
 // Waitlist

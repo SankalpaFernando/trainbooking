@@ -4,6 +4,7 @@ import { SegmentService } from '../services/segmentService';
 import { GapFinderService } from '../services/gapFinderService';
 import { BookingService } from '../services/bookingService';
 import { FareService } from '../services/fareService';
+import { RecaptchaService } from '../services/recaptchaService';
 import { AnalyticsService } from '../services/analyticsService';
 import { BookingStatus, CoachType, ClassType } from '@prisma/client';
 
@@ -116,17 +117,50 @@ export class ApiControllers {
    */
   public static async createHoldBooking(req: Request, res: Response) {
     try {
-      const { seatId, date, startStationId, endStationId, guestName, guestNic, guestMobile } = req.body;
+      const { seatId, date, startStationId, endStationId, guestName, guestNic, guestMobile, captchaToken } = req.body;
 
-      if (!seatId || !date || !startStationId || !endStationId || !guestName || !guestNic || !guestMobile) {
-        return res.status(400).json({ success: false, error: 'All fields are required' });
+      if (!seatId || !date || !startStationId || !endStationId || !guestName || !guestNic || !guestMobile || !captchaToken) {
+        return res.status(400).json({ success: false, error: 'All fields including captchaToken are required' });
       }
+
+      await RecaptchaService.verifyToken(captchaToken, req.ip);
 
       const booking = await BookingService.createHoldBooking({
         seatId: parseInt(seatId, 10),
         date,
         startStationId: parseInt(startStationId, 10),
         endStationId: parseInt(endStationId, 10),
+        guestName,
+        guestNic,
+        guestMobile,
+      });
+
+      return res.json({ success: true, data: booking });
+    } catch (e: any) {
+      return res.status(400).json({ success: false, error: e.message });
+    }
+  }
+
+  /**
+   * POST /api/bookings/hold-multi
+   */
+  public static async createHoldMultiBooking(req: Request, res: Response) {
+    try {
+      const { date, legs, guestName, guestNic, guestMobile, captchaToken } = req.body;
+
+      if (!date || !legs || !Array.isArray(legs) || legs.length === 0 || !guestName || !guestNic || !guestMobile || !captchaToken) {
+        return res.status(400).json({ success: false, error: 'All multi-leg booking fields including captchaToken are required' });
+      }
+
+      await RecaptchaService.verifyToken(captchaToken, req.ip);
+
+      const booking = await BookingService.createHoldMultiBooking({
+        date,
+        legs: legs.map((leg: any) => ({
+          seatId: parseInt(leg.seatId, 10),
+          startStationId: parseInt(leg.startStationId, 10),
+          endStationId: parseInt(leg.endStationId, 10),
+        })),
         guestName,
         guestNic,
         guestMobile,
@@ -149,6 +183,23 @@ export class ApiControllers {
       }
 
       const confirmed = await BookingService.confirmBooking(pnr);
+      return res.json({ success: true, data: confirmed });
+    } catch (e: any) {
+      return res.status(400).json({ success: false, error: e.message });
+    }
+  }
+
+  /**
+   * POST /api/bookings/confirm-multi
+   */
+  public static async confirmMultiBooking(req: Request, res: Response) {
+    try {
+      const { pnrs } = req.body;
+      if (!Array.isArray(pnrs) || pnrs.length === 0) {
+        return res.status(400).json({ success: false, error: 'PNRs are required to confirm a multi-leg booking' });
+      }
+
+      const confirmed = await BookingService.confirmMultiBooking(pnrs);
       return res.json({ success: true, data: confirmed });
     } catch (e: any) {
       return res.status(400).json({ success: false, error: e.message });

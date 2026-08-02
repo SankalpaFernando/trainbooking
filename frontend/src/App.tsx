@@ -6,6 +6,7 @@ import { SearchPanel } from './components/SearchPanel';
 import { InteractiveSeatMap } from './components/InteractiveSeatMap';
 import { MixedTicketCard } from './components/MixedTicketCard';
 import { CheckoutModal } from './components/CheckoutModal';
+import { MultiLegCheckoutModal } from './components/MultiLegCheckoutModal';
 import { EReceiptModal } from './components/EReceiptModal';
 import { WaitlistModal } from './components/WaitlistModal';
 import { AdminDashboard } from './components/AdminDashboard';
@@ -31,8 +32,10 @@ export const App: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
 
   // Selection & Modal states
-  const [selectedSeat, setSelectedSeat] = useState<SeatGapSummary | null>(null);
+  const [selectedSeats, setSelectedSeats] = useState<SeatGapSummary[]>([]);
+  const [selectedMixedTicket, setSelectedMixedTicket] = useState<MixedTicketRecommendation | null>(null);
   const [showCheckoutModal, setShowCheckoutModal] = useState<boolean>(false);
+  const [showMixedCheckoutModal, setShowMixedCheckoutModal] = useState<boolean>(false);
   const [showReceiptModal, setShowReceiptModal] = useState<boolean>(false);
   const [showWaitlistModal, setShowWaitlistModal] = useState<boolean>(false);
   const [confirmedBooking, setConfirmedBooking] = useState<Booking | null>(null);
@@ -76,7 +79,7 @@ export const App: React.FC = () => {
       return;
     }
     setLoading(true);
-    setSelectedSeat(null);
+    setSelectedSeats([]);
     try {
       const [availData, mixedData] = await Promise.all([
         ApiService.getSeatsAvailability(date, originId, destinationId),
@@ -98,28 +101,30 @@ export const App: React.FC = () => {
     }
   }, [stations]);
 
-  // Handle direct seat selection
+  // Handle direct seat selection toggles multi-seat selection
   const handleSelectSeat = (seat: SeatGapSummary) => {
-    setSelectedSeat(seat);
-    setShowCheckoutModal(true);
+    setSelectedSeats((current) => {
+      const exists = current.some((s) => s.seatId === seat.seatId);
+      if (exists) {
+        return current.filter((s) => s.seatId !== seat.seatId);
+      }
+      return [...current, seat];
+    });
   };
 
   // Handle multi-leg ticket selection
   const handleSelectMixedTicket = (rec: MixedTicketRecommendation) => {
-    if (rec.legs.length > 0) {
-      const firstLeg = rec.legs[0];
-      const matchingSeatSummary = availability?.seats.find((s) => s.seatId === firstLeg.seatId);
-      if (matchingSeatSummary) {
-        setSelectedSeat(matchingSeatSummary);
-        setShowCheckoutModal(true);
-      }
-    }
+    setSelectedMixedTicket(rec);
+    setShowMixedCheckoutModal(true);
   };
 
-  const handleBookingSuccess = (booking: Booking) => {
+  const handleBookingSuccess = (bookings: Booking[]) => {
     setShowCheckoutModal(false);
-    setConfirmedBooking(booking);
-    setShowReceiptModal(true);
+    setSelectedSeats([]);
+    if (bookings.length > 0) {
+      setConfirmedBooking(bookings[0]);
+      setShowReceiptModal(true);
+    }
     handleSearch(); // Refresh availability grid
   };
 
@@ -178,13 +183,33 @@ export const App: React.FC = () => {
               coaches={coaches}
               seats={availability.seats}
               fareEstimate={availability.fareEstimate}
-              selectedSeat={selectedSeat}
+              selectedSeats={selectedSeats}
               onSelectSeat={handleSelectSeat}
               stations={stations}
               originId={originId}
               destinationId={destinationId}
               onOpenWaitlist={() => setShowWaitlistModal(true)}
             />
+          )}
+
+          {/* Booking Action Bar */}
+          {selectedSeats.length > 0 && (
+            <div className="glass-card" style={{ padding: '20px', marginBottom: '24px', display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <div style={{ flex: '1 1 auto' }}>
+                <div style={{ fontWeight: 700, marginBottom: '4px' }}>{selectedSeats.length} seat{selectedSeats.length > 1 ? 's' : ''} selected</div>
+                <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                  Review your selection then proceed to checkout. You can select multiple available seats and book them together.
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                <button className="btn-primary" type="button" onClick={() => setShowCheckoutModal(true)}>
+                  Checkout Selected Seat{selectedSeats.length > 1 ? 's' : ''}
+                </button>
+                <button className="btn-secondary" type="button" onClick={() => setSelectedSeats([])}>
+                  Clear Selection
+                </button>
+              </div>
+            </div>
           )}
 
           {/* Mixed Ticket Recommendations */}
@@ -237,14 +262,35 @@ export const App: React.FC = () => {
       ) : null}
 
       {/* Checkout Modal */}
-      {showCheckoutModal && selectedSeat && originStation && destStation && (
+      {showCheckoutModal && selectedSeats.length > 0 && originStation && destStation && (
         <CheckoutModal
-          seat={selectedSeat}
+          seats={selectedSeats}
           originStation={originStation}
           destinationStation={destStation}
           date={date}
           onClose={() => setShowCheckoutModal(false)}
           onSuccess={handleBookingSuccess}
+        />
+      )}
+
+      {showMixedCheckoutModal && selectedMixedTicket && originStation && destStation && (
+        <MultiLegCheckoutModal
+          recommendation={selectedMixedTicket}
+          stations={stations}
+          date={date}
+          onClose={() => {
+            setSelectedMixedTicket(null);
+            setShowMixedCheckoutModal(false);
+          }}
+          onSuccess={(confirmedBookings) => {
+            setShowMixedCheckoutModal(false);
+            setSelectedMixedTicket(null);
+            if (confirmedBookings.length > 0) {
+              setConfirmedBooking(confirmedBookings[0]);
+              setShowReceiptModal(true);
+            }
+            handleSearch();
+          }}
         />
       )}
 

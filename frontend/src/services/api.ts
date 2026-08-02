@@ -75,8 +75,31 @@ export class ApiService {
     guestName: string;
     guestNic: string;
     guestMobile: string;
+    captchaToken: string;
   }): Promise<Booking> {
     const res = await fetch(`${API_BASE}/bookings/hold`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error);
+    return json.data;
+  }
+
+  public static async createHoldMultiBooking(data: {
+    date: string;
+    legs: Array<{
+      seatId: number;
+      startStationId: number;
+      endStationId: number;
+    }>;
+    guestName: string;
+    guestNic: string;
+    guestMobile: string;
+    captchaToken: string;
+  }): Promise<Booking[]> {
+    const res = await fetch(`${API_BASE}/bookings/hold-multi`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -91,6 +114,17 @@ export class ApiService {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ pnr }),
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error);
+    return json.data;
+  }
+
+  public static async confirmMultiBooking(pnrs: string[]): Promise<Booking[]> {
+    const res = await fetch(`${API_BASE}/bookings/confirm-multi`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pnrs }),
     });
     const json = await res.json();
     if (!json.success) throw new Error(json.error);

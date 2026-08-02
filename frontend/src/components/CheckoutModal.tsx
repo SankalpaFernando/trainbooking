@@ -1,19 +1,20 @@
 import React, { useState, useEffect } from 'react';
+import ReCAPTCHA from 'react-google-recaptcha';
 import { SeatGapSummary, Station, Booking } from '../types';
 import { ApiService } from '../services/api';
 import { Clock, CreditCard, User, CreditCard as CardIcon, Phone, ShieldCheck, X, AlertCircle } from 'lucide-react';
 
 interface CheckoutModalProps {
-  seat: SeatGapSummary;
+  seats: SeatGapSummary[];
   originStation: Station;
   destinationStation: Station;
   date: string;
   onClose: () => void;
-  onSuccess: (booking: Booking) => void;
+  onSuccess: (bookings: Booking[]) => void;
 }
 
 export const CheckoutModal: React.FC<CheckoutModalProps> = ({
-  seat,
+  seats,
   originStation,
   destinationStation,
   date,
@@ -23,14 +24,15 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [guestName, setGuestName] = useState('');
   const [guestNic, setGuestNic] = useState('');
   const [guestMobile, setGuestMobile] = useState('');
+  const [captchaToken, setCaptchaToken] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Hold reservation state & 300-second (5 min) timer
-  const [holdBooking, setHoldBooking] = useState<Booking | null>(null);
+  const [holdBookings, setHoldBookings] = useState<Booking[] | null>(null);
   const [timeLeft, setTimeLeft] = useState<number>(300);
 
-  const getCoachFare = () => {
+  const getLegFare = (seat: SeatGapSummary) => {
     const baseFare = 100;
     const ratePerStation = 50;
     const stationsTraversed = Math.abs(destinationStation.sequenceNumber - originStation.sequenceNumber);
@@ -40,7 +42,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
   useEffect(() => {
     let timer: ReturnType<typeof setInterval>;
-    if (holdBooking) {
+    if (holdBookings) {
       timer = setInterval(() => {
         setTimeLeft((prev) => {
           if (prev <= 1) {
@@ -53,25 +55,34 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       }, 1000);
     }
     return () => clearInterval(timer);
-  }, [holdBooking]);
+  }, [holdBookings]);
 
   const handleInitiateHold = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
+    if (!captchaToken) {
+      setError('Please complete the reCAPTCHA before booking.');
+      setLoading(false);
+      return;
+    }
+
     try {
-      const booking = await ApiService.createHoldBooking({
-        seatId: seat.seatId,
+      const bookings = await ApiService.createHoldMultiBooking({
         date,
-        startStationId: originStation.id,
-        endStationId: destinationStation.id,
+        legs: seats.map((seat) => ({
+          seatId: seat.seatId,
+          startStationId: originStation.id,
+          endStationId: destinationStation.id,
+        })),
         guestName,
         guestNic,
         guestMobile,
+        captchaToken,
       });
 
-      setHoldBooking(booking);
+      setHoldBookings(bookings);
     } catch (err: any) {
       setError(err.message || 'Failed to place seat hold reservation');
     } finally {
@@ -80,12 +91,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   };
 
   const handleConfirmPayment = async () => {
-    if (!holdBooking) return;
+    if (!holdBookings || holdBookings.length === 0) return;
     setLoading(true);
     setError(null);
 
     try {
-      const confirmed = await ApiService.confirmBooking(holdBooking.pnr);
+      const confirmed = await ApiService.confirmMultiBooking(holdBookings.map((booking) => booking.pnr));
       onSuccess(confirmed);
     } catch (err: any) {
       setError(err.message || 'Payment confirmation failed');
@@ -160,7 +171,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         )}
 
         {/* Step 1: Passenger Form */}
-        {!holdBooking ? (
+{!holdBookings ? (
           <form onSubmit={handleInitiateHold}>
             
             {/* Ticket Summary Box */}
@@ -178,9 +189,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 </span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.85rem' }}>
-                <span style={{ color: 'var(--text-muted)' }}>SEAT & COACH:</span>
+                <span style={{ color: 'var(--text-muted)' }}>SEATS:</span>
                 <span style={{ fontWeight: 700 }}>
-                  Seat {seat.seatNumber} ({seat.coachName})
+                  {seats.map((seat) => seat.seatNumber).join(', ')}
                 </span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.85rem' }}>
@@ -188,8 +199,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 <span style={{ fontWeight: 700 }}>{date}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                <span style={{ color: 'var(--text-muted)' }}>FARE:</span>
-                <span style={{ fontWeight: 700, color: 'var(--accent-emerald)' }}>LKR {getCoachFare().toFixed(2)}</span>
+                <span style={{ color: 'var(--text-muted)' }}>TOTAL FARE:</span>
+                <span style={{ fontWeight: 700, color: 'var(--accent-emerald)' }}>
+                  LKR {seats.reduce((sum, seat) => sum + getLegFare(seat), 0).toFixed(2)}
+                </span>
               </div>
             </div>
 
@@ -241,6 +254,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               </div>
             </div>
 
+            <div style={{ marginBottom: '16px' }}>
+              <ReCAPTCHA
+                sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+                onChange={(value) => setCaptchaToken(value || '')}
+                onExpired={() => setCaptchaToken('')}
+              />
+            </div>
             <button
               type="submit"
               className="btn-primary"
@@ -281,17 +301,25 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               fontSize: '0.88rem',
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ color: 'var(--text-muted)' }}>PNR Code:</span>
-                <span style={{ fontWeight: 800, color: 'var(--accent-cyan)' }}>{holdBooking.pnr}</span>
+                <span style={{ color: 'var(--text-muted)' }}>Held Bookings:</span>
+                <span style={{ fontWeight: 800, color: 'var(--accent-cyan)' }}>{holdBookings.length} PNR{holdBookings.length > 1 ? 's' : ''}</span>
+              </div>
+              <div style={{ marginBottom: '12px' }}>
+                {holdBookings.map((booking, idx) => (
+                  <div key={booking.pnr} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>PNR {idx + 1}:</span>
+                    <span style={{ fontWeight: 800, color: 'var(--accent-cyan)' }}>{booking.pnr}</span>
+                  </div>
+                ))}
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ color: 'var(--text-muted)' }}>Passenger:</span>
-                <span style={{ fontWeight: 600 }}>{holdBooking.guestName}</span>
+                <span style={{ fontWeight: 600 }}>{holdBookings[0]?.guestName}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ color: 'var(--text-muted)' }}>Total Payable:</span>
                 <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--accent-emerald)' }}>
-                  LKR {holdBooking.totalFare.toFixed(2)}
+                  LKR {holdBookings.reduce((sum, booking) => sum + booking.totalFare, 0).toFixed(2)}
                 </span>
               </div>
             </div>

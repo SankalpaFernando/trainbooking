@@ -6,7 +6,7 @@ interface InteractiveSeatMapProps {
   coaches: Coach[];
   seats: SeatGapSummary[];
   fareEstimate?: FareEstimate;
-  selectedSeat: SeatGapSummary | null;
+  selectedSeats: SeatGapSummary[];
   onSelectSeat: (seat: SeatGapSummary) => void;
   stations: Station[];
   originId: number;
@@ -18,7 +18,7 @@ export const InteractiveSeatMap: React.FC<InteractiveSeatMapProps> = ({
   coaches,
   seats,
   fareEstimate,
-  selectedSeat,
+  selectedSeats,
   onSelectSeat,
   stations,
   originId,
@@ -198,7 +198,7 @@ export const InteractiveSeatMap: React.FC<InteractiveSeatMapProps> = ({
           margin: '0 auto',
         }}>
           {coachSeats.map((seat) => {
-            const isSelected = selectedSeat?.seatId === seat.seatId;
+            const isSelected = selectedSeats.some((selected) => selected.seatId === seat.seatId);
             const isOccupiedOnLeg = !seat.isAvailableForRequestedLeg;
             const isPartialUsedOtherLeg = seat.occupiedIntervals.length > 0 && !isOccupiedOnLeg;
 
