@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ReCAPTCHA from 'react-google-recaptcha';
 import { SeatGapSummary, Station, Booking } from '../types';
 import { ApiService } from '../services/api';
+import { isValidSriLankanNic, isValidSriLankanPhone } from '../utils/validation';
 import { Clock, CreditCard, User, CreditCard as CardIcon, Phone, ShieldCheck, X, AlertCircle } from 'lucide-react';
 
 interface CheckoutModalProps {
@@ -61,6 +62,18 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     e.preventDefault();
     setError(null);
     setLoading(true);
+
+    if (!isValidSriLankanNic(guestNic)) {
+      setError('Please enter a valid NIC number or passport ID.');
+      setLoading(false);
+      return;
+    }
+
+    if (!isValidSriLankanPhone(guestMobile)) {
+      setError('Please enter a valid Sri Lankan mobile number, e.g. +94771234567 or 0771234567.');
+      setLoading(false);
+      return;
+    }
 
     if (!captchaToken) {
       setError('Please complete the reCAPTCHA before booking.');

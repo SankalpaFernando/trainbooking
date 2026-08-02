@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Station } from '../types';
 import { ApiService } from '../services/api';
+import { isValidSriLankanNic, isValidSriLankanPhone } from '../utils/validation';
 import { Clock, User, Phone, ShieldCheck, X, CheckCircle } from 'lucide-react';
 
 interface WaitlistModalProps {
@@ -27,6 +28,18 @@ export const WaitlistModal: React.FC<WaitlistModalProps> = ({
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    if (!isValidSriLankanNic(guestNic)) {
+      setError('Please enter a valid NIC number.');
+      setLoading(false);
+      return;
+    }
+
+    if (!isValidSriLankanPhone(guestMobile)) {
+      setError('Please enter a valid Sri Lankan mobile number, e.g. +94771234567 or 0771234567.');
+      setLoading(false);
+      return;
+    }
 
     try {
       await ApiService.addToWaitlist({

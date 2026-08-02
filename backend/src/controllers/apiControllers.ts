@@ -5,6 +5,7 @@ import { GapFinderService } from '../services/gapFinderService';
 import { BookingService } from '../services/bookingService';
 import { FareService } from '../services/fareService';
 import { RecaptchaService } from '../services/recaptchaService';
+import { ValidationService } from '../services/validationService';
 import { AnalyticsService } from '../services/analyticsService';
 import { BookingStatus, CoachType, ClassType } from '@prisma/client';
 
@@ -123,6 +124,14 @@ export class ApiControllers {
         return res.status(400).json({ success: false, error: 'All fields including captchaToken are required' });
       }
 
+      if (!ValidationService.isValidSriLankanNic(guestNic)) {
+        return res.status(400).json({ success: false, error: 'Invalid NIC or passport format' });
+      }
+
+      if (!ValidationService.isValidSriLankanPhone(guestMobile)) {
+        return res.status(400).json({ success: false, error: 'Invalid Sri Lankan mobile number' });
+      }
+
       await RecaptchaService.verifyToken(captchaToken, req.ip);
 
       const booking = await BookingService.createHoldBooking({
@@ -150,6 +159,14 @@ export class ApiControllers {
 
       if (!date || !legs || !Array.isArray(legs) || legs.length === 0 || !guestName || !guestNic || !guestMobile || !captchaToken) {
         return res.status(400).json({ success: false, error: 'All multi-leg booking fields including captchaToken are required' });
+      }
+
+      if (!ValidationService.isValidSriLankanNic(guestNic)) {
+        return res.status(400).json({ success: false, error: 'Invalid NIC or passport format' });
+      }
+
+      if (!ValidationService.isValidSriLankanPhone(guestMobile)) {
+        return res.status(400).json({ success: false, error: 'Invalid Sri Lankan mobile number' });
       }
 
       await RecaptchaService.verifyToken(captchaToken, req.ip);
@@ -243,6 +260,18 @@ export class ApiControllers {
 
       if (!startStation || !endStation) {
         return res.status(404).json({ success: false, error: 'Station not found' });
+      }
+
+      if (!guestName || !guestNic || !guestMobile) {
+        return res.status(400).json({ success: false, error: 'Name, NIC, and mobile are all required' });
+      }
+
+      if (!ValidationService.isValidSriLankanNic(guestNic)) {
+        return res.status(400).json({ success: false, error: 'Invalid NIC or passport format' });
+      }
+
+      if (!ValidationService.isValidSriLankanPhone(guestMobile)) {
+        return res.status(400).json({ success: false, error: 'Invalid Sri Lankan mobile number' });
       }
 
       const waitlist = await prisma.waitlist.create({
