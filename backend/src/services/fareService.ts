@@ -30,6 +30,7 @@ export class FareService {
       case ClassType.SECOND_CLASS:
         return 1.2;
       case ClassType.THIRD_CLASS:
+        return 1.0;
       default:
         return 1.0;
     }
@@ -37,15 +38,14 @@ export class FareService {
 
   public static calculateFare(
     input: FareCalculationInput,
-    options?: { excludeBaseFare?: boolean }
+    options: { excludeBaseFare?: boolean } = { excludeBaseFare: false }
   ): FareResult {
     const baseFare = this.getBaseFare();
     const ratePerStation = this.getPerStationRate();
     const stationsTraversed = Math.abs(input.endStationSeq - input.startStationSeq);
     const classMultiplier = this.getClassMultiplier(input.classType);
-    const excludeBaseFare = !options?.excludeBaseFare;
 
-    const subtotal = (excludeBaseFare ? 0 : baseFare) + (stationsTraversed * ratePerStation * classMultiplier);
+    const subtotal = (options.excludeBaseFare ? 0 : baseFare) + (stationsTraversed * ratePerStation * classMultiplier);
     const totalFare = Math.round(subtotal * 100) / 100;
 
     return {

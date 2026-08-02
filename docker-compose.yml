@@ -37,6 +37,7 @@ services:
       dockerfile: Dockerfile
     container_name: train_booking_backend
     environment:
+      NODE_ENV: development
       DATABASE_URL: "postgresql://postgres:postgres@db:5432/railway_booking?schema=public"
       REDIS_URL: "redis://redis:6379"
       PORT: 5001
@@ -45,6 +46,11 @@ services:
       HOLD_TTL_SECONDS: 300
     ports:
       - "5001:5001"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    entrypoint: []
+    command: npm run dev
     depends_on:
       db:
         condition: service_healthy
@@ -52,12 +58,18 @@ services:
         condition: service_healthy
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
+    image: node:20-alpine
     container_name: train_booking_frontend
+    environment:
+      NODE_ENV: development
+    working_dir: /app
     ports:
-      - "3000:80"
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    entrypoint: []
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5173"
     depends_on:
       - backend
 

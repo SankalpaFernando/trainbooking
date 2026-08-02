@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Coach, SeatGapSummary, Station } from '../types';
+import { Coach, SeatGapSummary, Station, FareEstimate } from '../types';
 import { Armchair, Info, CheckCircle2, AlertTriangle, XCircle, Sparkles } from 'lucide-react';
 
 interface InteractiveSeatMapProps {
   coaches: Coach[];
   seats: SeatGapSummary[];
+  fareEstimate?: FareEstimate;
   selectedSeat: SeatGapSummary | null;
   onSelectSeat: (seat: SeatGapSummary) => void;
   stations: Station[];
@@ -16,6 +17,7 @@ interface InteractiveSeatMapProps {
 export const InteractiveSeatMap: React.FC<InteractiveSeatMapProps> = ({
   coaches,
   seats,
+  fareEstimate,
   selectedSeat,
   onSelectSeat,
   stations,
@@ -34,6 +36,27 @@ export const InteractiveSeatMap: React.FC<InteractiveSeatMapProps> = ({
 
   const originStation = stations.find((s) => s.id === originId);
   const destStation = stations.find((s) => s.id === destinationId);
+
+  const getClassMultiplier = (classType: Coach['classType']) => {
+    switch (classType) {
+      case 'FIRST_CLASS':
+        return 1.5;
+      case 'SECOND_CLASS':
+        return 1.2;
+      case 'THIRD_CLASS':
+      default:
+        return 1.0;
+    }
+  };
+
+  const getCoachFare = (classType: Coach['classType']) => {
+    if (!fareEstimate) return null;
+    const baseFare = fareEstimate.baseFare;
+    const ratePerStation = fareEstimate.ratePerStation;
+    const stationsTraversed = fareEstimate.stationsTraversed;
+    const multiplier = getClassMultiplier(classType);
+    return Math.round((baseFare + stationsTraversed * ratePerStation * multiplier) * 100) / 100;
+  };
 
   const getStationName = (seq: number) => {
     const st = stations.find((s) => s.sequenceNumber === seq);
@@ -104,8 +127,14 @@ export const InteractiveSeatMap: React.FC<InteractiveSeatMapProps> = ({
               <div style={{ fontWeight: 700, fontSize: '0.88rem', color: isSelected ? 'var(--accent-cyan)' : 'var(--text-main)' }}>
                 {c.name}
               </div>
-              <div style={{ fontSize: '0.75rem', marginTop: '2px', display: 'flex', justifyContent: 'space-between' }}>
+              <div style={{ fontSize: '0.75rem', marginTop: '2px', display: 'flex', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
                 <span>{c.classType.replace('_', ' ')}</span>
+                <span style={{ color: 'var(--text-muted)' }}>
+                  {getCoachFare(c.classType) !== null ? `LKR ${getCoachFare(c.classType)?.toFixed(2)}` : 'Loading price...'}
+                </span>
+              </div>
+              <div style={{ fontSize: '0.75rem', marginTop: '4px', display: 'flex', justifyContent: 'space-between' }}>
+                <span />
                 <span style={{ color: availCount > 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)', fontWeight: 600 }}>
                   {availCount} free
                 </span>

@@ -143,6 +143,7 @@ export const App: React.FC = () => {
             <InteractiveSeatMap
               coaches={coaches}
               seats={availability.seats}
+              fareEstimate={availability.fareEstimate}
               selectedSeat={selectedSeat}
               onSelectSeat={handleSelectSeat}
               stations={stations}
