@@ -39,14 +39,13 @@ export class GapFinderService {
     try {
       const seatSummaries = await SegmentService.getSeatsAvailability(date, reqStart, reqEnd);
 
-      // Rule: If the passenger can go from start to end in a single seat, don't show multi-hop.
-      const hasDirectSeat = seatSummaries.some((s) =>
-        s.availableGaps.some((gap) => gap.startSeq <= reqStart && gap.endSeq >= reqEnd)
+      // Remove the global direct seat check so that multi-hop can be generated
+      // even if direct seats exist (e.g. in other classes). 
+      // To force the algorithm to generate true multi-leg routes (and efficiently pack the train),
+      // we exclude any seat that can cover the entire journey by itself.
+      const candidateSeats = seatSummaries.filter((s) =>
+        !s.availableGaps.some((gap) => gap.startSeq <= reqStart && gap.endSeq >= reqEnd)
       );
-
-      if (hasDirectSeat) {
-        return []; // Suppress multi-leg since direct seat exists
-      }
 
       const route: CandidateLeg[] = [];
       let currentSeq = reqStart;
@@ -72,8 +71,8 @@ export class GapFinderService {
         let bestSeat: SeatGapSummary | null = null;
         let maxEnd = currentSeq;
 
-        // Find the reserved seat that covers currentSeq and goes the furthest
-        for (const seat of seatSummaries) {
+        // Find the fragmented reserved seat that covers currentSeq and goes the furthest
+        for (const seat of candidateSeats) {
           for (const gap of seat.availableGaps) {
             if (gap.startSeq <= currentSeq && gap.endSeq > currentSeq) {
               const reachableEnd = Math.min(gap.endSeq, reqEnd);
@@ -89,10 +88,10 @@ export class GapFinderService {
           route.push({ seat: bestSeat, startSeq: currentSeq, endSeq: maxEnd });
           currentSeq = maxEnd;
         } else {
-          // No reserved seat available at currentSeq. 
-          // Find the next station where ANY seat becomes available.
+          // No fragmented reserved seat available at currentSeq. 
+          // Find the next station where ANY fragmented seat becomes available.
           let nextAvailableSeq = reqEnd;
-          for (const seat of seatSummaries) {
+          for (const seat of candidateSeats) {
             for (const gap of seat.availableGaps) {
               if (gap.startSeq > currentSeq && gap.startSeq < nextAvailableSeq) {
                 nextAvailableSeq = gap.startSeq;
@@ -106,7 +105,7 @@ export class GapFinderService {
       }
 
       if (route.length <= 1) {
-        // Just one dummy leg, or one direct seat (which is handled earlier)
+        // Just one dummy leg. (Real seats that span the whole route were filtered out).
         return [];
       }
 

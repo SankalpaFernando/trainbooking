@@ -156,7 +156,12 @@ export class SegmentService {
 
       const numMatch = seat.seatNumber.match(/\d+/);
       const num = numMatch ? parseInt(numMatch[0]) : 0;
-      const isWindowSeat = num > 0 && (num % 6 === 1 || num % 6 === 0);
+      
+      let seatsPerRow = 6;
+      if (seat.coach.classType === 'FIRST_CLASS') seatsPerRow = 4;
+      else if (seat.coach.classType === 'SECOND_CLASS') seatsPerRow = 5;
+      
+      const isWindowSeat = num > 0 && (num % seatsPerRow === 1 || num % seatsPerRow === 0);
       const coachData = seat.coach as any;
 
       return {
@@ -234,7 +239,12 @@ export class SegmentService {
       const isFullyAvailableForRoute = gaps.length === 1 && gaps[0].startSeq === minSeq && gaps[0].endSeq === maxSeq;
       const numMatch = seat.seatNumber.match(/\d+/);
       const num = numMatch ? parseInt(numMatch[0]) : 0;
-      const isWindowSeat = num > 0 && (num % 6 === 1 || num % 6 === 0);
+      
+      let seatsPerRow = 6;
+      if (seat.coach.classType === 'FIRST_CLASS') seatsPerRow = 4;
+      else if (seat.coach.classType === 'SECOND_CLASS') seatsPerRow = 5;
+      
+      const isWindowSeat = num > 0 && (num % seatsPerRow === 1 || num % seatsPerRow === 0);
       const coachData = seat.coach as any;
 
       const summary: SeatGapSummary = {

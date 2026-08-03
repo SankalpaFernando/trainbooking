@@ -199,13 +199,35 @@ export const InteractiveSeatMap: React.FC<InteractiveSeatMapProps> = ({
         {/* Seat Grid */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(6, 1fr)',
+          gridTemplateColumns: activeCoach?.classType === 'FIRST_CLASS' 
+            ? '1fr 1fr 40px 1fr 1fr' 
+            : activeCoach?.classType === 'SECOND_CLASS'
+            ? '1fr 1fr 40px 1fr 1fr 1fr'
+            : '1fr 1fr 1fr 40px 1fr 1fr 1fr',
           gap: '14px',
           maxWidth: '540px',
           margin: '0 auto',
         }}>
-          {coachSeats.map((seat) => {
+          {coachSeats.map((seat, index) => {
             const isSelected = selectedSeats.some((selected) => selected.seatId === seat.seatId);
+            
+            // Calculate grid column positioning to create an aisle
+            const numMatch = seat.seatNumber.match(/\d+/);
+            const num = numMatch ? parseInt(numMatch[0]) : (index + 1);
+            let seatsPerRow = 6;
+            let aisleAfter = 3;
+            
+            if (activeCoach?.classType === 'FIRST_CLASS') {
+              seatsPerRow = 4;
+              aisleAfter = 2;
+            } else if (activeCoach?.classType === 'SECOND_CLASS') {
+              seatsPerRow = 5;
+              aisleAfter = 2;
+            }
+            
+            const positionInRow = ((num - 1) % seatsPerRow) + 1;
+            // If the seat is AFTER the aisle, we shift it one column to the right
+            const gridColumnStart = positionInRow > aisleAfter ? positionInRow + 1 : positionInRow;
             const isOccupiedOnLeg = !seat.isAvailableForRequestedLeg;
             const isPartialUsedOtherLeg = seat.occupiedIntervals.length > 0 && !isOccupiedOnLeg;
 
@@ -215,7 +237,7 @@ export const InteractiveSeatMap: React.FC<InteractiveSeatMapProps> = ({
             else if (isPartialUsedOtherLeg) buttonClass = 'seat-button seat-partial';
 
             return (
-              <div key={seat.seatId} style={{ position: 'relative' }}>
+              <div key={seat.seatId} style={{ position: 'relative', gridColumnStart }}>
                 <button
                   className={buttonClass}
                   onClick={() => !isOccupiedOnLeg && onSelectSeat(seat)}
