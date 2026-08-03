@@ -36,7 +36,18 @@ export class SegmentService {
     existStart: number,
     existEnd: number
   ): boolean {
-    return reqStart < existEnd && reqEnd > existStart;
+    const isReqUp = reqStart < reqEnd;
+    const isExistUp = existStart < existEnd;
+    
+    // Up and Down journeys do not overlap with each other
+    if (isReqUp !== isExistUp) return false;
+
+    const normReqStart = Math.min(reqStart, reqEnd);
+    const normReqEnd = Math.max(reqStart, reqEnd);
+    const normExistStart = Math.min(existStart, existEnd);
+    const normExistEnd = Math.max(existStart, existEnd);
+
+    return normReqStart < normExistEnd && normReqEnd > normExistStart;
   }
 
   /**
@@ -76,7 +87,8 @@ export class SegmentService {
     reqEnd: number,
     coachIdFilter?: number
   ): Promise<SeatGapSummary[]> {
-    const cacheKey = `cache:seatGaps:${date}`;
+    const isUp = reqStart < reqEnd;
+    const cacheKey = `cache:seatGaps:${date}:${isUp ? 'UP' : 'DOWN'}`;
     
     // Check Redis Hash Cache
     let cachedStrings: string[] = [];
@@ -94,7 +106,7 @@ export class SegmentService {
       summaries = allSummaries.map((s) => ({
         ...s,
         isAvailableForRequestedLeg: !s.occupiedIntervals.some((occ) =>
-          this.isOverlapping(reqStart, reqEnd, occ.startSeq, occ.endSeq)
+          this.isOverlapping(reqStart, reqEnd, occ.startSeq, occ.endSeq, true)
         ),
       }));
     } else {
@@ -146,12 +158,22 @@ export class SegmentService {
       orderBy: [{ coachId: 'asc' }, { seatNumber: 'asc' }],
     });
 
-    const summaries: SeatGapSummary[] = seats.map((seat) => {
-      const { occupied, gaps } = this.calculateGaps(seat.bookings, minSeq, maxSeq);
+    const buildSummaries = (isUp: boolean) => seats.map((seat) => {
+      let bookings = seat.bookings;
+      if (isUp) {
+        bookings = bookings.filter(b => b.startStationSeq < b.endStationSeq);
+      } else {
+        bookings = bookings.filter(b => b.startStationSeq > b.endStationSeq).map(b => ({
+          startStationSeq: b.endStationSeq,
+          endStationSeq: b.startStationSeq
+        }));
+      }
+
+      const { occupied, gaps } = this.calculateGaps(bookings, minSeq, maxSeq);
 
       const isFullyAvailableForRoute = gaps.length === 1 && gaps[0].startSeq === minSeq && gaps[0].endSeq === maxSeq;
       const isAvailableForRequestedLeg = !occupied.some((occ) =>
-        this.isOverlapping(reqStart, reqEnd, occ.startSeq, occ.endSeq)
+        this.isOverlapping(reqStart, reqEnd, occ.startSeq, occ.endSeq, true)
       );
 
       const numMatch = seat.seatNumber.match(/\d+/);
@@ -179,23 +201,32 @@ export class SegmentService {
         baseFare: coachData.baseFare ?? 100,
         ratePerStation: coachData.ratePerStation ?? 50,
         windowSurcharge: coachData.windowSurcharge ?? 100,
-      };
+      } as SeatGapSummary;
     });
+
+    const upSummaries = buildSummaries(true);
+    const downSummaries = buildSummaries(false);
 
     // Write to Redis Hash cache
     try {
-      const cacheKey = `cache:seatGaps:${date}`;
+      const upCacheKey = `cache:seatGaps:${date}:UP`;
+      const downCacheKey = `cache:seatGaps:${date}:DOWN`;
       const pipeline = redis.pipeline();
-      for (const summary of summaries) {
-        pipeline.hset(cacheKey, String(summary.seatId), JSON.stringify(summary));
+      for (const summary of upSummaries) {
+        pipeline.hset(upCacheKey, String(summary.seatId), JSON.stringify(summary));
       }
-      pipeline.expire(cacheKey, 3600); // 1 hour TTL for the hash
+      for (const summary of downSummaries) {
+        pipeline.hset(downCacheKey, String(summary.seatId), JSON.stringify(summary));
+      }
+      pipeline.expire(upCacheKey, 3600); // 1 hour TTL
+      pipeline.expire(downCacheKey, 3600);
       await pipeline.exec();
     } catch (e) {
       console.warn('Failed to set Redis Hash cache:', e);
     }
 
-    return summaries;
+    const isReqUp = reqStart < reqEnd;
+    return isReqUp ? upSummaries : downSummaries;
   }
 
   /**
@@ -204,10 +235,13 @@ export class SegmentService {
    */
   public static async updateSeatAvailabilityInCache(date: string, seatId: number): Promise<void> {
     try {
-      const cacheKey = `cache:seatGaps:${date}`;
-      const exists = await redis.exists(cacheKey);
-      if (!exists) {
-        // Cache is empty, no need to update granularly, it will rebuild on next fetch
+      const upCacheKey = `cache:seatGaps:${date}:UP`;
+      const downCacheKey = `cache:seatGaps:${date}:DOWN`;
+      const existsUp = await redis.exists(upCacheKey);
+      const existsDown = await redis.exists(downCacheKey);
+      
+      if (!existsUp && !existsDown) {
+        // Cache is empty, no need to update granularly
         return;
       }
 
@@ -235,36 +269,49 @@ export class SegmentService {
 
       if (!seat) return;
 
-      const { occupied, gaps } = this.calculateGaps(seat.bookings, minSeq, maxSeq);
-      const isFullyAvailableForRoute = gaps.length === 1 && gaps[0].startSeq === minSeq && gaps[0].endSeq === maxSeq;
-      const numMatch = seat.seatNumber.match(/\d+/);
-      const num = numMatch ? parseInt(numMatch[0]) : 0;
-      
-      let seatsPerRow = 6;
-      if (seat.coach.classType === 'FIRST_CLASS') seatsPerRow = 4;
-      else if (seat.coach.classType === 'SECOND_CLASS') seatsPerRow = 5;
-      
-      const isWindowSeat = num > 0 && (num % seatsPerRow === 1 || num % seatsPerRow === 0);
-      const coachData = seat.coach as any;
+      const buildSummary = (isUp: boolean): SeatGapSummary => {
+        let bookings = seat.bookings;
+        if (isUp) {
+          bookings = bookings.filter(b => b.startStationSeq < b.endStationSeq);
+        } else {
+          bookings = bookings.filter(b => b.startStationSeq > b.endStationSeq).map(b => ({
+            startStationSeq: b.endStationSeq,
+            endStationSeq: b.startStationSeq
+          }));
+        }
 
-      const summary: SeatGapSummary = {
-        seatId: seat.id,
-        seatNumber: seat.seatNumber,
-        coachId: seat.coachId,
-        coachName: seat.coach.name,
-        coachType: seat.coach.type,
-        classType: seat.coach.classType,
-        occupiedIntervals: occupied,
-        availableGaps: gaps,
-        isFullyAvailableForRoute,
-        isAvailableForRequestedLeg: true, // Will be dynamically computed on fetch
-        isWindowSeat,
-        baseFare: coachData.baseFare ?? 100,
-        ratePerStation: coachData.ratePerStation ?? 50,
-        windowSurcharge: coachData.windowSurcharge ?? 100,
+        const { occupied, gaps } = this.calculateGaps(bookings, minSeq, maxSeq);
+        const isFullyAvailableForRoute = gaps.length === 1 && gaps[0].startSeq === minSeq && gaps[0].endSeq === maxSeq;
+        const numMatch = seat.seatNumber.match(/\d+/);
+        const num = numMatch ? parseInt(numMatch[0]) : 0;
+        
+        let seatsPerRow = 6;
+        if (seat.coach.classType === 'FIRST_CLASS') seatsPerRow = 4;
+        else if (seat.coach.classType === 'SECOND_CLASS') seatsPerRow = 5;
+        
+        const isWindowSeat = num > 0 && (num % seatsPerRow === 1 || num % seatsPerRow === 0);
+        const coachData = seat.coach as any;
+
+        return {
+          seatId: seat.id,
+          seatNumber: seat.seatNumber,
+          coachId: seat.coachId,
+          coachName: seat.coach.name,
+          coachType: seat.coach.type,
+          classType: seat.coach.classType,
+          occupiedIntervals: occupied,
+          availableGaps: gaps,
+          isFullyAvailableForRoute,
+          isAvailableForRequestedLeg: true, // Will be dynamically computed on fetch
+          isWindowSeat,
+          baseFare: coachData.baseFare ?? 100,
+          ratePerStation: coachData.ratePerStation ?? 50,
+          windowSurcharge: coachData.windowSurcharge ?? 100,
+        };
       };
 
-      await redis.hset(cacheKey, String(seatId), JSON.stringify(summary));
+      if (existsUp) await redis.hset(upCacheKey, String(seatId), JSON.stringify(buildSummary(true)));
+      if (existsDown) await redis.hset(downCacheKey, String(seatId), JSON.stringify(buildSummary(false)));
     } catch (e) {
       console.warn(`Failed to update granular Redis cache for seat ${seatId}:`, e);
     }

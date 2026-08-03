@@ -39,16 +39,20 @@ export class GapFinderService {
     try {
       const seatSummaries = await SegmentService.getSeatsAvailability(date, reqStart, reqEnd);
 
+      const isUp = reqStart < reqEnd;
+      const normReqStart = Math.min(reqStart, reqEnd);
+      const normReqEnd = Math.max(reqStart, reqEnd);
+
       // Remove the global direct seat check so that multi-hop can be generated
       // even if direct seats exist (e.g. in other classes). 
       // To force the algorithm to generate true multi-leg routes (and efficiently pack the train),
       // we exclude any seat that can cover the entire journey by itself.
       const candidateSeats = seatSummaries.filter((s) =>
-        !s.availableGaps.some((gap) => gap.startSeq <= reqStart && gap.endSeq >= reqEnd)
+        !s.availableGaps.some((gap) => gap.startSeq <= normReqStart && gap.endSeq >= normReqEnd)
       );
 
       const route: CandidateLeg[] = [];
-      let currentSeq = reqStart;
+      let currentSeq = normReqStart;
 
       const dummySeat: SeatGapSummary = {
         seatId: -1,
@@ -64,10 +68,10 @@ export class GapFinderService {
         occupiedIntervals: [],
         isFullyAvailableForRoute: true,
         isAvailableForRequestedLeg: true,
-        availableGaps: [{ startSeq: reqStart, endSeq: reqEnd }],
+        availableGaps: [{ startSeq: normReqStart, endSeq: normReqEnd }],
       };
 
-      while (currentSeq < reqEnd) {
+      while (currentSeq < normReqEnd) {
         let bestSeat: SeatGapSummary | null = null;
         let maxEnd = currentSeq;
 
@@ -75,7 +79,7 @@ export class GapFinderService {
         for (const seat of candidateSeats) {
           for (const gap of seat.availableGaps) {
             if (gap.startSeq <= currentSeq && gap.endSeq > currentSeq) {
-              const reachableEnd = Math.min(gap.endSeq, reqEnd);
+              const reachableEnd = Math.min(gap.endSeq, normReqEnd);
               if (reachableEnd > maxEnd) {
                 maxEnd = reachableEnd;
                 bestSeat = seat;
@@ -90,7 +94,7 @@ export class GapFinderService {
         } else {
           // No fragmented reserved seat available at currentSeq. 
           // Find the next station where ANY fragmented seat becomes available.
-          let nextAvailableSeq = reqEnd;
+          let nextAvailableSeq = normReqEnd;
           for (const seat of candidateSeats) {
             for (const gap of seat.availableGaps) {
               if (gap.startSeq > currentSeq && gap.startSeq < nextAvailableSeq) {
@@ -148,8 +152,8 @@ export class GapFinderService {
           coachId: leg.seat.coachId,
           coachName: leg.seat.coachName,
           classType: leg.seat.classType as ClassType,
-          startStationSeq: leg.startSeq,
-          endStationSeq: leg.endSeq,
+          startStationSeq: isUp ? leg.startSeq : leg.endSeq,
+          endStationSeq: isUp ? leg.endSeq : leg.startSeq,
           fare: legFares[index],
         })),
       };
