@@ -134,7 +134,7 @@ export class BookingService {
         },
       });
 
-      bookingStatusCounter.inc({ status: 'pending' });
+      bookingStatusCounter.inc({ status: 'pending_hold' });
       logger.info({ pnr: booking.pnr, status: booking.status }, 'Created pending hold booking');
 
       // 5. Rebuild CQRS Cache in background
@@ -304,7 +304,7 @@ export class BookingService {
         return created;
       });
 
-      bookingStatusCounter.inc({ status: 'pending' }, bookings.length);
+      bookingStatusCounter.inc({ status: 'pending_hold' }, bookings.length);
       logger.info({ count: bookings.length, date: dto.date }, 'Created multi-leg pending hold booking');
       SegmentService.rebuildAndCacheSeatsAvailability(dto.date).catch((err) => logger.warn({ err }, 'Failed to rebuild CQRS cache'));
       return bookings;
