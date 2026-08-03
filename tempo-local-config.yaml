@@ -1,0 +1,16 @@
+server:
+  http_listen_port: 4318
+  grpc_listen_port: 4317
+  log_level: info
+  trace:
+    compress_spans: false
+    receiver: zipkin
+    receiver: otlp
+    receiver: jaeger
+    receiver: grpc
+    receiver: prometheus
+  storage:
+    trace:
+      backend: filesystem
+      filesystem:
+        path: /tempo/traces

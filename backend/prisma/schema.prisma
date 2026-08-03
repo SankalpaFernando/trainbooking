@@ -1,0 +1,110 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum CoachType {
+  RESERVED
+  UNRESERVED
+}
+
+enum ClassType {
+  FIRST_CLASS
+  SECOND_CLASS
+  THIRD_CLASS
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  EXPIRED
+  CANCELLED
+}
+
+enum WaitlistStatus {
+  WAITING
+  NOTIFIED
+  FULFILLED
+  CANCELLED
+}
+model Booking {
+  id              Int           @id @default(autoincrement())
+  pnr             String        @unique
+  seatId          Int
+  seat            Seat          @relation(fields: [seatId], references: [id], onDelete: Cascade)
+  date            String
+  startStationSeq Int
+  endStationSeq   Int
+  startStationId  Int
+  endStationId    Int
+  startStation    Station       @relation("StartStation", fields: [startStationId], references: [id])
+  endStation      Station       @relation("EndStation", fields: [endStationId], references: [id])
+  status          BookingStatus @default(PENDING)
+  guestName       String
+  guestNic        String
+  guestMobile     String
+  totalFare       Float
+  holdExpiresAt   DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([seatId, date])
+  @@index([status])
+}
+
+
+model Waitlist {
+  id              Int            @id @default(autoincrement())
+  date            String
+  startStationSeq Int
+  endStationSeq   Int
+  startStationId  Int
+  endStationId    Int
+  startStation    Station        @relation("WaitlistStartStation", fields: [startStationId], references: [id])
+  endStation      Station        @relation("WaitlistEndStation", fields: [endStationId], references: [id])
+  guestName       String
+  guestNic        String
+  guestMobile     String
+  status          WaitlistStatus @default(WAITING)
+  createdAt       DateTime       @default(now())
+
+  @@index([date, status])
+}
+
+
+model Station {
+  id               Int        @id @default(autoincrement())
+  name             String     @unique
+  code             String     @unique
+  sequenceNumber   Int        @unique
+  distanceKm       Float      @default(0)
+  startBookings    Booking[]  @relation("StartStation")
+  endBookings      Booking[]  @relation("EndStation")
+  startWaitlists   Waitlist[] @relation("WaitlistStartStation")
+  endWaitlists     Waitlist[] @relation("WaitlistEndStation")
+}
+
+model Coach {
+  id          Int       @id @default(autoincrement())
+  name        String
+  type        CoachType @default(RESERVED)
+  classType   ClassType @default(FIRST_CLASS)
+  totalSeats  Int       @default(24)
+  seats       Seat[]
+}
+
+model Seat {
+  id         Int       @id @default(autoincrement())
+  seatNumber String
+  coachId    Int
+  coach      Coach     @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  bookings   Booking[]
+
+  @@unique([coachId, seatNumber])
+}
+
+
