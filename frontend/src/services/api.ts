@@ -202,6 +202,18 @@ export class ApiService {
     return json.data;
   }
 
+  public static async deleteCoach(id: number): Promise<void> {
+    const auth = localStorage.getItem('adminAuth');
+    if (!auth) throw new Error('Not authenticated');
+
+    const res = await fetch(`${API_BASE}/admin/coaches/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: auth },
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error);
+  }
+
   // --- TICKET CHECKER & ADMIN API ---
 
   public static async checkerLogin(username: string, password: string):Promise<{token: string, username: string}> {

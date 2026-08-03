@@ -310,14 +310,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ date }) => {
                       <td style={{ padding: '12px 8px' }}>{coach.ratePerStation ?? 50}</td>
                       <td style={{ padding: '12px 8px' }}>{coach.windowSurcharge ?? 100}</td>
                       <td style={{ padding: '12px 8px' }}>
-                        <button className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={() => {
-                          setEditingCoachId(coach.id);
-                          setEditPricing({
-                            baseFare: coach.baseFare ?? 100,
-                            ratePerStation: coach.ratePerStation ?? 50,
-                            windowSurcharge: coach.windowSurcharge ?? 100,
-                          });
-                        }}>Edit</button>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={() => {
+                            setEditingCoachId(coach.id);
+                            setEditPricing({
+                              baseFare: coach.baseFare ?? 100,
+                              ratePerStation: coach.ratePerStation ?? 50,
+                              windowSurcharge: coach.windowSurcharge ?? 100,
+                            });
+                          }}>Edit</button>
+                          <button className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.8rem', borderColor: 'var(--accent-rose)', color: 'var(--accent-rose)' }} onClick={async () => {
+                            if (confirm(`Are you sure you want to delete coach ${coach.name}?`)) {
+                              try {
+                                await ApiService.deleteCoach(coach.id);
+                                fetchAnalytics(); // Refresh
+                              } catch (e: any) {
+                                alert(e.message || 'Delete failed');
+                              }
+                            }
+                          }}>Delete</button>
+                        </div>
                       </td>
                     </>
                   )}
