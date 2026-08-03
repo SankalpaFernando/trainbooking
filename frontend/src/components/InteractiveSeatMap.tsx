@@ -49,9 +49,10 @@ export const InteractiveSeatMap: React.FC<InteractiveSeatMapProps> = ({
     }
   };
 
-  const getCoachFare = (classType: Coach['classType']) => {
+  const getCoachFare = (classType: Coach['classType'], coachId: number) => {
     if (!fareEstimate) return null;
-    const firstSeat = coachSeats[0];
+    const specificCoachSeats = seats.filter(s => s.coachId === coachId);
+    const firstSeat = specificCoachSeats[0];
     const baseFare = firstSeat?.baseFare ?? fareEstimate.baseFare;
     const ratePerStation = firstSeat?.ratePerStation ?? fareEstimate.ratePerStation;
     const stationsTraversed = fareEstimate.stationsTraversed;
@@ -153,7 +154,7 @@ export const InteractiveSeatMap: React.FC<InteractiveSeatMapProps> = ({
               <div style={{ fontSize: '0.75rem', marginTop: '2px', display: 'flex', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
                 <span>{c.classType.replace('_', ' ')}</span>
                 <span style={{ color: 'var(--text-muted)' }}>
-                  {getCoachFare(c.classType) !== null ? `LKR ${getCoachFare(c.classType)?.toFixed(2)}` : 'Loading price...'}
+                  {getCoachFare(c.classType, c.id) !== null ? `LKR ${getCoachFare(c.classType, c.id)?.toFixed(2)}` : 'Loading price...'}
                 </span>
               </div>
               <div style={{ fontSize: '0.75rem', marginTop: '4px', display: 'flex', justifyContent: 'space-between' }}>

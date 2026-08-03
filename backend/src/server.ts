@@ -33,6 +33,18 @@ setInterval(() => {
   });
 }, 15000);
 
+// Run daily cleanup of past bookings every hour
+setInterval(() => {
+  BookingService.deletePastBookings().catch((err) => {
+    logger.error({ err }, 'Error during past bookings deletion worker run');
+  });
+}, 60 * 60 * 1000);
+
+// Also run once on startup
+BookingService.deletePastBookings().catch((err) => {
+  logger.error({ err }, 'Error during past bookings deletion on startup');
+});
+
 app.listen(PORT, () => {
   logger.info({ port: PORT }, 'Railway Seat Booking API Server running');
 });

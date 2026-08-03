@@ -375,6 +375,32 @@ export class ApiControllers {
     }
   }
 
+  /**
+   * DELETE /api/admin/coaches/:id
+   */
+  public static async deleteCoach(req: Request, res: Response) {
+    try {
+      const id = parseInt(req.params.id, 10);
+      if (isNaN(id)) {
+        return res.status(400).json({ success: false, error: 'Invalid coach ID' });
+      }
+
+      // Check if any bookings exist for seats in this coach
+      const existingBooking = await prisma.booking.findFirst({
+        where: { seat: { coachId: id } },
+      });
+
+      if (existingBooking) {
+        return res.status(400).json({ success: false, error: 'Cannot delete coach with existing bookings' });
+      }
+
+      await prisma.coach.delete({ where: { id } });
+      return res.json({ success: true, data: { deleted: true } });
+    } catch (e: any) {
+      return res.status(500).json({ success: false, error: e.message });
+    }
+  }
+
   // --- TICKET CHECKER & ADMIN ENDPOINTS ---
 
   /**

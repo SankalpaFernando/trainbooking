@@ -74,6 +74,7 @@ router.post('/waitlist', ApiControllers.addToWaitlist);
 router.get('/admin/analytics', requireAdminAuth, ApiControllers.getAdminAnalytics);
 router.post('/admin/coaches', requireAdminAuth, ApiControllers.createCoach);
 router.put('/admin/coaches/:id/pricing', requireAdminAuth, ApiControllers.updateCoachPricing);
+router.delete('/admin/coaches/:id', requireAdminAuth, ApiControllers.deleteCoach);
 router.get('/admin/checkers', requireAdminAuth, ApiControllers.getCheckers);
 router.post('/admin/checkers', requireAdminAuth, ApiControllers.createChecker);
 router.put('/admin/checkers/:id', requireAdminAuth, ApiControllers.updateChecker);

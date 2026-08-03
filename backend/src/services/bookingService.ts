@@ -421,4 +421,26 @@ export class BookingService {
       logger.info({ count: expired.count }, 'Auto-expired pending hold reservations');
     }
   }
+
+  /**
+   * Removes all bookings and waitlists for dates prior to today.
+   */
+  public static async deletePastBookings() {
+    const today = new Date().toISOString().split('T')[0];
+    
+    const deletedBookings = await prisma.booking.deleteMany({
+      where: { date: { lt: today } },
+    });
+    
+    const deletedWaitlists = await prisma.waitlist.deleteMany({
+      where: { date: { lt: today } },
+    });
+    
+    if (deletedBookings.count > 0 || deletedWaitlists.count > 0) {
+      logger.info(
+        { bookings: deletedBookings.count, waitlists: deletedWaitlists.count },
+        'Auto-deleted past bookings and waitlists'
+      );
+    }
+  }
 }

@@ -49,7 +49,7 @@ export class FareService {
     const classMultiplier = this.getClassMultiplier(input.classType);
     const windowSurcharge = input.isWindowSeat ? windowSurchargeRate : 0;
 
-    const subtotal = (options.excludeBaseFare ? 0 : baseFare) + (stationsTraversed * ratePerStation * classMultiplier) + windowSurcharge;
+    const subtotal = ((options.excludeBaseFare ? 0 : baseFare) + (stationsTraversed * ratePerStation)) * classMultiplier + windowSurcharge;
     const totalFare = Math.round(subtotal * 100) / 100;
 
     return {
