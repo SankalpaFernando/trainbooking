@@ -60,6 +60,7 @@ export class GapFinderService {
                 startStationSeq: leg.startSeq,
                 endStationSeq: leg.endSeq,
                 classType: leg.seat.classType as ClassType,
+                isWindowSeat: leg.seat.isWindowSeat,
               },
               { excludeBaseFare: true }
             ).totalFare
