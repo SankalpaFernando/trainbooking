@@ -12,6 +12,8 @@ export interface Coach {
   type: 'RESERVED' | 'UNRESERVED';
   classType: 'FIRST_CLASS' | 'SECOND_CLASS' | 'THIRD_CLASS';
   totalSeats: number;
+  rows?: number;
+  seatsPerRow?: number;
   baseFare?: number;
   ratePerStation?: number;
   windowSurcharge?: number;

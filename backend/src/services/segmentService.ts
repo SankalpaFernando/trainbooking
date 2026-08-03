@@ -179,12 +179,10 @@ export class SegmentService {
       const numMatch = seat.seatNumber.match(/\d+/);
       const num = numMatch ? parseInt(numMatch[0]) : 0;
       
-      let seatsPerRow = 6;
-      if (seat.coach.classType === 'FIRST_CLASS') seatsPerRow = 4;
-      else if (seat.coach.classType === 'SECOND_CLASS') seatsPerRow = 5;
+      const coachData = seat.coach as any;
+      const seatsPerRow = coachData.seatsPerRow ?? 4;
       
       const isWindowSeat = num > 0 && (num % seatsPerRow === 1 || num % seatsPerRow === 0);
-      const coachData = seat.coach as any;
 
       return {
         seatId: seat.id,
@@ -285,12 +283,10 @@ export class SegmentService {
         const numMatch = seat.seatNumber.match(/\d+/);
         const num = numMatch ? parseInt(numMatch[0]) : 0;
         
-        let seatsPerRow = 6;
-        if (seat.coach.classType === 'FIRST_CLASS') seatsPerRow = 4;
-        else if (seat.coach.classType === 'SECOND_CLASS') seatsPerRow = 5;
+        const coachData = seat.coach as any;
+        const seatsPerRow = coachData.seatsPerRow ?? 4;
         
         const isWindowSeat = num > 0 && (num % seatsPerRow === 1 || num % seatsPerRow === 0);
-        const coachData = seat.coach as any;
 
         return {
           seatId: seat.id,

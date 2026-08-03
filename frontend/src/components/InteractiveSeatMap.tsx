@@ -68,7 +68,8 @@ export const InteractiveSeatMap: React.FC<InteractiveSeatMapProps> = ({
 
   const isWindowSeat = (seatNumber: string): boolean => {
     const number = parseInt(seatNumber.split('-').pop() || '0', 10);
-    return number % 4 === 1 || number % 4 === 0;
+    const spr = activeCoach?.seatsPerRow ?? 4;
+    return number > 0 && (number % spr === 1 || number % spr === 0);
   };
 
   const getCoachFare = (classType: Coach['classType'], coachId: number) => {
@@ -89,16 +90,19 @@ export const InteractiveSeatMap: React.FC<InteractiveSeatMapProps> = ({
 
   const hasAnyAvailableSeat = seats.some((s) => s.isAvailableForRequestedLeg);
 
-  // Group seats by row based on coach class type for proper grid rendering
- // 2 + aisle + 2 seat layout
-const seatsPerRow = 4;
-const aisleAfter = 2;
+  const seatsPerRow = activeCoach?.seatsPerRow ?? 4;
+  const aisleAfter = Math.floor(seatsPerRow / 2);
 
-const seatRows: SeatGapSummary[][] = [];
+  const seatRows: SeatGapSummary[][] = [];
 
-for (let i = 0; i < coachSeats.length; i += seatsPerRow) {
-  seatRows.push(coachSeats.slice(i, i + seatsPerRow));
-}
+  for (let i = 0; i < coachSeats.length; i += seatsPerRow) {
+    seatRows.push(coachSeats.slice(i, i + seatsPerRow));
+  }
+  
+  const gridTemplateColumns = Array.from({ length: seatsPerRow }, (_, i) => {
+    if (i === aisleAfter) return '40px 1fr';
+    return '1fr';
+  }).join(' ');
 
   return (
     <div className="glass-card" style={{ padding: '24px', marginBottom: '24px' }}>
@@ -243,7 +247,7 @@ for (let i = 0; i < coachSeats.length; i += seatsPerRow) {
     key={`row-${rowIndex}`}
     style={{
       display: 'grid',
-      gridTemplateColumns: '1fr 1fr 40px 1fr 1fr',
+      gridTemplateColumns,
       gap: '12px',
       alignItems: 'center',
       justifyContent: 'center',
@@ -273,7 +277,7 @@ for (let i = 0; i < coachSeats.length; i += seatsPerRow) {
 
       return (
         <React.Fragment key={seat.seatId}>
-          {seatIndex === 2 && (
+          {seatIndex === aisleAfter && (
             <div
               style={{
                 width: '40px',

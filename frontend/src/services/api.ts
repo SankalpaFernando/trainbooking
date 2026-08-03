@@ -169,7 +169,8 @@ export class ApiService {
     name: string;
     type: 'RESERVED' | 'UNRESERVED';
     classType: 'FIRST_CLASS' | 'SECOND_CLASS' | 'THIRD_CLASS';
-    totalSeats: number;
+    rows: number;
+    seatsPerRow: number;
     prefix: string;
   }) {
     const res = await fetch(`${API_BASE}/admin/coaches`, {

@@ -22,7 +22,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ date }) => {
   const [coachName, setCoachName] = useState('');
   const [coachType, setCoachType] = useState<'RESERVED' | 'UNRESERVED'>('RESERVED');
   const [classType, setClassType] = useState<'FIRST_CLASS' | 'SECOND_CLASS' | 'THIRD_CLASS'>('FIRST_CLASS');
-  const [totalSeats, setTotalSeats] = useState(24);
+  const [rows, setRows] = useState(6);
+  const [seatsPerRow, setSeatsPerRow] = useState(4);
   const [prefix, setPrefix] = useState('X');
 
   const [checkerUser, setCheckerUser] = useState('');
@@ -71,7 +72,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ date }) => {
         name: coachName,
         type: coachType,
         classType,
-        totalSeats,
+        rows,
+        seatsPerRow,
         prefix,
       });
       setShowAddCoach(false);
@@ -231,10 +233,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ date }) => {
                   <option value="THIRD_CLASS">THIRD CLASS</option>
                 </select>
               </div>
-              <div>
-                <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Total Seats</label>
-                <input type="number" required min={1} max={60} className="input-field" value={totalSeats} onChange={(e) => setTotalSeats(parseInt(e.target.value, 10))} />
-              </div>
+              {coachType === 'RESERVED' && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className="input-group">
+                    <label className="input-label">Number of Rows</label>
+                    <input type="number" required min={1} max={20} className="input-field" value={rows} onChange={(e) => setRows(parseInt(e.target.value, 10) || 1)} />
+                  </div>
+                  <div className="input-group">
+                    <label className="input-label">Seats Per Row</label>
+                    <input type="number" required min={1} max={10} className="input-field" value={seatsPerRow} onChange={(e) => setSeatsPerRow(parseInt(e.target.value, 10) || 1)} />
+                  </div>
+                </div>
+              )}
               <div>
                 <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Seat Prefix</label>
                 <input type="text" required placeholder="e.g. I" className="input-field" value={prefix} onChange={(e) => setPrefix(e.target.value)} />
