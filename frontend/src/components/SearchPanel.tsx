@@ -60,7 +60,7 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
         </div>
 
         {/* Arrow indicator */}
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', paddingBottom: '10px' }}>
+        <div className="mobile-hide" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', paddingBottom: '10px' }}>
           <ArrowRight size={22} color="var(--accent-cyan)" />
         </div>
 

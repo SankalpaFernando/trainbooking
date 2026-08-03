@@ -39,7 +39,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
         </div>
 
         {/* Navigation Mode Switcher */}
-        <div style={{ display: 'flex', gap: '10px', background: 'rgba(15, 23, 42, 0.7)', padding: '6px', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
+        <div className="nav-buttons" style={{ display: 'flex', gap: '10px', background: 'rgba(15, 23, 42, 0.7)', padding: '6px', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
           <button
             onClick={() => setActiveTab('booking')}
             className={activeTab === 'booking' ? 'btn-primary' : 'btn-secondary'}

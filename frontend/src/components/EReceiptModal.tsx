@@ -75,7 +75,7 @@ export const EReceiptModal: React.FC<EReceiptModalProps> = ({ bookings, onClose 
           </div>
 
           {/* Passenger & Journey Specs */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+          <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
             <div>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>PASSENGER NAME</span>
               <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{booking.guestName}</div>
