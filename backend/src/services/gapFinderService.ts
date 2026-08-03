@@ -39,31 +39,57 @@ export class GapFinderService {
     try {
       const seatSummaries = await SegmentService.getSeatsAvailability(date, reqStart, reqEnd);
 
+      const hasDirectSeat = seatSummaries.some((s) =>
+        s.availableGaps.some((gap) => gap.startSeq <= reqStart && gap.endSeq >= reqEnd)
+      );
+
+      if (hasDirectSeat) {
+        return [];
+      }
+
       // Use any seat with availability inside the requested route window so the recommendation
       // can mix classes (first, second, third) and fill the gaps between reqStart and reqEnd.
       const candidateSeats = seatSummaries.filter((s) =>
         s.availableGaps.some((gap) => gap.endSeq > reqStart && gap.startSeq < reqEnd)
       );
 
-      const candidateRoutes = this.buildMultiLegRoutes(candidateSeats, reqStart, reqEnd, 5);
+      let candidateRoutes = this.buildMultiLegRoutes(candidateSeats, reqStart, reqEnd, 5, false);
+      if (candidateRoutes.length === 0) {
+        // Fallback to dummy unreserved seats to fill gaps
+        candidateRoutes = this.buildMultiLegRoutes(candidateSeats, reqStart, reqEnd, 5, true);
+      }
+
       if (candidateRoutes.length === 0) {
         return [];
       }
 
       const recommendations = candidateRoutes
         .map((route) => {
-          const legFares = route.map((leg) =>
-            FareService.calculateFare({
-              startStationSeq: leg.startSeq,
-              endStationSeq: leg.endSeq,
-              classType: leg.seat.classType as ClassType,
-              isWindowSeat: leg.seat.isWindowSeat,
-              pricing: {
-                baseFare: leg.seat.baseFare,
-                ratePerStation: leg.seat.ratePerStation,
-                windowSurcharge: leg.seat.windowSurcharge,
+          let longestLegIndex = 0;
+          let maxStations = 0;
+          route.forEach((leg, index) => {
+            const stations = leg.endSeq - leg.startSeq;
+            if (stations > maxStations) {
+              maxStations = stations;
+              longestLegIndex = index;
+            }
+          });
+
+          const legFares = route.map((leg, index) =>
+            FareService.calculateFare(
+              {
+                startStationSeq: leg.startSeq,
+                endStationSeq: leg.endSeq,
+                classType: leg.seat.classType as ClassType,
+                isWindowSeat: leg.seat.isWindowSeat,
+                pricing: {
+                  baseFare: leg.seat.baseFare,
+                  ratePerStation: leg.seat.ratePerStation,
+                  windowSurcharge: leg.seat.windowSurcharge,
+                },
               },
-            }).totalFare
+              { excludeBaseFare: index !== longestLegIndex }
+            ).totalFare
           );
 
           const totalFare = Math.round((legFares.reduce((sum, fare) => sum + fare, 0)) * 100) / 100;
@@ -104,7 +130,8 @@ export class GapFinderService {
     reservedSeats: SeatGapSummary[],
     reqStart: number,
     reqEnd: number,
-    maxLegs: number
+    maxLegs: number,
+    allowDummy: boolean = false
   ): CandidateLeg[][] {
     const transferPoints = new Set<number>([reqStart, reqEnd]);
 
@@ -132,6 +159,25 @@ export class GapFinderService {
       }
     };
 
+    const dummySeat: SeatGapSummary = {
+      seatId: -1,
+      seatNumber: 'None',
+      coachId: -1,
+      coachName: 'Unreserved',
+      coachType: 'THIRD_CLASS' as any,
+      classType: ClassType.THIRD_CLASS,
+      isWindowSeat: false,
+      baseFare: parseFloat(process.env.BASE_FARE || '100'),
+      ratePerStation: parseFloat(process.env.PER_STATION_RATE || '50'),
+      windowSurcharge: 0,
+      occupiedIntervals: [],
+      isFullyAvailableForRoute: true,
+      isAvailableForRequestedLeg: true,
+      availableGaps: [{ startSeq: reqStart, endSeq: reqEnd }],
+    };
+
+    const seatsToExplore = allowDummy ? [...reservedSeats, dummySeat] : reservedSeats;
+
     const dfs = (currentSeq: number, route: CandidateLeg[]) => {
       if (route.length > maxLegs) {
         return;
@@ -145,13 +191,23 @@ export class GapFinderService {
         return;
       }
 
-      for (const seat of reservedSeats) {
+      for (const seat of seatsToExplore) {
+        const isDummy = seat.seatId === -1;
         for (const gap of seat.availableGaps) {
           if (gap.startSeq <= currentSeq && gap.endSeq > currentSeq) {
             const maxEnd = Math.min(gap.endSeq, reqEnd);
             for (const nextPoint of sortedPoints) {
               if (nextPoint <= currentSeq || nextPoint > maxEnd) {
                 continue;
+              }
+
+              if (isDummy) {
+                const isRealSeatStart = reservedSeats.some(s => 
+                  s.availableGaps.some(g => g.startSeq === nextPoint)
+                );
+                if (nextPoint !== reqEnd && !isRealSeatStart) {
+                  continue;
+                }
               }
 
               route.push({ seat, startSeq: currentSeq, endSeq: nextPoint });
