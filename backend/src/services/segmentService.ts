@@ -18,6 +18,7 @@ export interface SeatGapSummary {
   availableGaps: Interval[];
   isFullyAvailableForRoute: boolean;
   isAvailableForRequestedLeg: boolean;
+  isWindowSeat: boolean;
 }
 
 export class SegmentService {
@@ -154,6 +155,10 @@ export class SegmentService {
         this.isOverlapping(reqStart, reqEnd, occ.startSeq, occ.endSeq)
       );
 
+      const numMatch = seat.seatNumber.match(/\d+/);
+      const num = numMatch ? parseInt(numMatch[0]) : 0;
+      const isWindowSeat = num > 0 && (num % 6 === 1 || num % 6 === 0);
+
       return {
         seatId: seat.id,
         seatNumber: seat.seatNumber,
@@ -165,6 +170,7 @@ export class SegmentService {
         availableGaps: gaps,
         isFullyAvailableForRoute,
         isAvailableForRequestedLeg,
+        isWindowSeat,
       };
     });
 

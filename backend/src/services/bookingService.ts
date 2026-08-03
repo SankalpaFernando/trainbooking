@@ -101,10 +101,15 @@ export class BookingService {
       }
 
       // 3. Calculate Fare
+      const numMatch = seat.seatNumber.match(/\d+/);
+      const num = numMatch ? parseInt(numMatch[0]) : 0;
+      const isWindowSeat = num > 0 && (num % 6 === 1 || num % 6 === 0);
+
       const fareResult = FareService.calculateFare({
         startStationSeq: startStation.sequenceNumber,
         endStationSeq: endStation.sequenceNumber,
         classType: seat.coach.classType,
+        isWindowSeat,
       });
 
       // 4. Create Pending Booking with Hold Expiry
@@ -267,10 +272,15 @@ export class BookingService {
             throw new Error(`Seat ${seat.seatNumber} is no longer available for one of the requested legs.`);
           }
 
+          const numMatch = seat.seatNumber.match(/\d+/);
+          const num = numMatch ? parseInt(numMatch[0]) : 0;
+          const isWindowSeat = num > 0 && (num % 6 === 1 || num % 6 === 0);
+
           const fareResult = FareService.calculateFare({
             startStationSeq: startStation.sequenceNumber,
             endStationSeq: endStation.sequenceNumber,
             classType: seat.coach.classType,
+            isWindowSeat,
           });
 
           const pnr = this.generatePNR();

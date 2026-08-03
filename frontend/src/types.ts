@@ -37,6 +37,7 @@ export interface SeatGapSummary {
   availableGaps: Interval[];
   isFullyAvailableForRoute: boolean;
   isAvailableForRequestedLeg: boolean;
+  isWindowSeat?: boolean;
 }
 
 export interface FareEstimate {

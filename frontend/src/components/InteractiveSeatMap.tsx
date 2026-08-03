@@ -98,6 +98,12 @@ export const InteractiveSeatMap: React.FC<InteractiveSeatMapProps> = ({
             <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-cyan))' }}></span>
             <span>Selected</span>
           </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ position: 'relative', width: '16px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-cyan)' }}>
+              <Sparkles size={12} />
+            </div>
+            <span>Window Seat (+100 LKR)</span>
+          </div>
         </div>
       </div>
 
@@ -215,8 +221,16 @@ export const InteractiveSeatMap: React.FC<InteractiveSeatMapProps> = ({
                   onMouseEnter={() => setHoveredSeatId(seat.seatId)}
                   onMouseLeave={() => setHoveredSeatId(null)}
                   disabled={isOccupiedOnLeg}
+                  style={seat.isWindowSeat ? { borderColor: 'var(--accent-cyan)', borderWidth: '2px' } : {}}
                 >
-                  <Armchair size={16} />
+                  <div style={{ position: 'relative' }}>
+                    <Armchair size={16} />
+                    {seat.isWindowSeat && (
+                      <div style={{ position: 'absolute', top: '-6px', right: '-8px', color: 'var(--accent-cyan)' }}>
+                        <Sparkles size={10} />
+                      </div>
+                    )}
+                  </div>
                   <span>{seat.seatNumber.split('-')[1]}</span>
                 </button>
 
@@ -224,8 +238,13 @@ export const InteractiveSeatMap: React.FC<InteractiveSeatMapProps> = ({
                 {hoveredSeatId === seat.seatId && (
                   <div className="tooltip-box">
                     <div style={{ fontWeight: 700, color: 'var(--accent-cyan)', marginBottom: '4px' }}>
-                      Seat {seat.seatNumber} ({seat.coachName})
+                      Seat {seat.seatNumber} ({seat.coachName}) {seat.isWindowSeat && '🌟 Window Seat'}
                     </div>
+                    {seat.isWindowSeat && (
+                      <div style={{ fontSize: '0.75rem', color: 'var(--accent-teal)', marginBottom: '4px' }}>
+                        +100 LKR Window Surcharge
+                      </div>
+                    )}
                     {seat.occupiedIntervals.length === 0 ? (
                       <div style={{ color: 'var(--accent-emerald)' }}>✨ Completely Unbooked across entire line</div>
                     ) : (
