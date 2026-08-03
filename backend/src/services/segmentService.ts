@@ -19,6 +19,9 @@ export interface SeatGapSummary {
   isFullyAvailableForRoute: boolean;
   isAvailableForRequestedLeg: boolean;
   isWindowSeat: boolean;
+  baseFare: number;
+  ratePerStation: number;
+  windowSurcharge: number;
 }
 
 export class SegmentService {
@@ -158,6 +161,7 @@ export class SegmentService {
       const numMatch = seat.seatNumber.match(/\d+/);
       const num = numMatch ? parseInt(numMatch[0]) : 0;
       const isWindowSeat = num > 0 && (num % 6 === 1 || num % 6 === 0);
+      const coachData = seat.coach as any;
 
       return {
         seatId: seat.id,
@@ -171,6 +175,9 @@ export class SegmentService {
         isFullyAvailableForRoute,
         isAvailableForRequestedLeg,
         isWindowSeat,
+        baseFare: coachData.baseFare ?? 100,
+        ratePerStation: coachData.ratePerStation ?? 50,
+        windowSurcharge: coachData.windowSurcharge ?? 100,
       };
     });
 

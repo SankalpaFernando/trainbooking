@@ -89,12 +89,15 @@ model Station {
 }
 
 model Coach {
-  id          Int       @id @default(autoincrement())
-  name        String
-  type        CoachType @default(RESERVED)
-  classType   ClassType @default(FIRST_CLASS)
-  totalSeats  Int       @default(24)
-  seats       Seat[]
+  id              Int       @id @default(autoincrement())
+  name            String
+  type            CoachType @default(RESERVED)
+  classType       ClassType @default(FIRST_CLASS)
+  totalSeats      Int       @default(24)
+  baseFare        Float     @default(100)
+  ratePerStation  Float     @default(50)
+  windowSurcharge Float     @default(100)
+  seats           Seat[]
 }
 
 model Seat {

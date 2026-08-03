@@ -24,14 +24,14 @@ const STATIONS = [
 ];
 
 const COACHES = [
-  { name: 'Coach A - Observation Car', type: CoachType.RESERVED, classType: ClassType.FIRST_CLASS, totalSeats: 24, prefix: 'A' },
-  { name: 'Coach B - Air Conditioned', type: CoachType.RESERVED, classType: ClassType.FIRST_CLASS, totalSeats: 24, prefix: 'B' },
-  { name: 'Coach C - 2nd Class Reserved', type: CoachType.RESERVED, classType: ClassType.SECOND_CLASS, totalSeats: 24, prefix: 'C' },
-  { name: 'Coach D - 2nd Class Open', type: CoachType.UNRESERVED, classType: ClassType.SECOND_CLASS, totalSeats: 30, prefix: 'D' },
-  { name: 'Coach E - 3rd Class Open', type: CoachType.UNRESERVED, classType: ClassType.THIRD_CLASS, totalSeats: 40, prefix: 'E' },
-  { name: 'Coach F - 3rd Class Open', type: CoachType.UNRESERVED, classType: ClassType.THIRD_CLASS, totalSeats: 40, prefix: 'F' },
-  { name: 'Coach G - 3rd Class Open', type: CoachType.UNRESERVED, classType: ClassType.THIRD_CLASS, totalSeats: 40, prefix: 'G' },
-  { name: 'Coach H - 3rd Class Open', type: CoachType.UNRESERVED, classType: ClassType.THIRD_CLASS, totalSeats: 40, prefix: 'H' },
+  { name: 'Coach A - Observation Car', type: CoachType.RESERVED, classType: ClassType.FIRST_CLASS, totalSeats: 24, prefix: 'A', baseFare: 500, ratePerStation: 100, windowSurcharge: 200 },
+  { name: 'Coach B - Air Conditioned', type: CoachType.RESERVED, classType: ClassType.FIRST_CLASS, totalSeats: 24, prefix: 'B', baseFare: 500, ratePerStation: 100, windowSurcharge: 200 },
+  { name: 'Coach C - 2nd Class Reserved', type: CoachType.RESERVED, classType: ClassType.SECOND_CLASS, totalSeats: 24, prefix: 'C', baseFare: 250, ratePerStation: 50, windowSurcharge: 100 },
+  { name: 'Coach D - 2nd Class Open', type: CoachType.UNRESERVED, classType: ClassType.SECOND_CLASS, totalSeats: 30, prefix: 'D', baseFare: 200, ratePerStation: 40, windowSurcharge: 50 },
+  { name: 'Coach E - 3rd Class Open', type: CoachType.UNRESERVED, classType: ClassType.THIRD_CLASS, totalSeats: 40, prefix: 'E', baseFare: 100, ratePerStation: 25, windowSurcharge: 50 },
+  { name: 'Coach F - 3rd Class Open', type: CoachType.UNRESERVED, classType: ClassType.THIRD_CLASS, totalSeats: 40, prefix: 'F', baseFare: 100, ratePerStation: 25, windowSurcharge: 50 },
+  { name: 'Coach G - 3rd Class Open', type: CoachType.UNRESERVED, classType: ClassType.THIRD_CLASS, totalSeats: 40, prefix: 'G', baseFare: 100, ratePerStation: 25, windowSurcharge: 50 },
+  { name: 'Coach H - 3rd Class Open', type: CoachType.UNRESERVED, classType: ClassType.THIRD_CLASS, totalSeats: 40, prefix: 'H', baseFare: 100, ratePerStation: 25, windowSurcharge: 50 },
 ];
 
 async function main() {
@@ -62,6 +62,9 @@ async function main() {
         type: ch.type,
         classType: ch.classType,
         totalSeats: ch.totalSeats,
+        baseFare: ch.baseFare,
+        ratePerStation: ch.ratePerStation,
+        windowSurcharge: ch.windowSurcharge,
       },
     });
 

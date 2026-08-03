@@ -51,8 +51,9 @@ export const InteractiveSeatMap: React.FC<InteractiveSeatMapProps> = ({
 
   const getCoachFare = (classType: Coach['classType']) => {
     if (!fareEstimate) return null;
-    const baseFare = fareEstimate.baseFare;
-    const ratePerStation = fareEstimate.ratePerStation;
+    const firstSeat = coachSeats[0];
+    const baseFare = firstSeat?.baseFare ?? fareEstimate.baseFare;
+    const ratePerStation = firstSeat?.ratePerStation ?? fareEstimate.ratePerStation;
     const stationsTraversed = fareEstimate.stationsTraversed;
     const multiplier = getClassMultiplier(classType);
     return Math.round((baseFare + stationsTraversed * ratePerStation * multiplier) * 100) / 100;
@@ -102,7 +103,7 @@ export const InteractiveSeatMap: React.FC<InteractiveSeatMapProps> = ({
             <div style={{ position: 'relative', width: '16px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-cyan)' }}>
               <Sparkles size={12} />
             </div>
-            <span>Window Seat (+100 LKR)</span>
+            <span>Window Seat (+{coachSeats[0]?.windowSurcharge ?? 100} LKR)</span>
           </div>
         </div>
       </div>
@@ -242,7 +243,7 @@ export const InteractiveSeatMap: React.FC<InteractiveSeatMapProps> = ({
                     </div>
                     {seat.isWindowSeat && (
                       <div style={{ fontSize: '0.75rem', color: 'var(--accent-teal)', marginBottom: '4px' }}>
-                        +100 LKR Window Surcharge
+                        +{seat.windowSurcharge ?? 100} LKR Window Surcharge
                       </div>
                     )}
                     {seat.occupiedIntervals.length === 0 ? (

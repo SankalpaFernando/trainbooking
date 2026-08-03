@@ -12,6 +12,9 @@ export interface Coach {
   type: 'RESERVED' | 'UNRESERVED';
   classType: 'FIRST_CLASS' | 'SECOND_CLASS' | 'THIRD_CLASS';
   totalSeats: number;
+  baseFare?: number;
+  ratePerStation?: number;
+  windowSurcharge?: number;
   seats?: Seat[];
 }
 
@@ -38,6 +41,9 @@ export interface SeatGapSummary {
   isFullyAvailableForRoute: boolean;
   isAvailableForRequestedLeg: boolean;
   isWindowSeat?: boolean;
+  baseFare?: number;
+  ratePerStation?: number;
+  windowSurcharge?: number;
 }
 
 export interface FareEstimate {

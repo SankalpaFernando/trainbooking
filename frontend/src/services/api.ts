@@ -184,4 +184,21 @@ export class ApiService {
     if (!json.success) throw new Error(json.error);
     return json.data;
   }
+
+  public static async updateCoachPricing(
+    coachId: number,
+    data: { baseFare: number; ratePerStation: number; windowSurcharge: number }
+  ) {
+    const res = await fetch(`${API_BASE}/admin/coaches/${coachId}/pricing`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify(data),
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error);
+    return json.data;
+  }
 }

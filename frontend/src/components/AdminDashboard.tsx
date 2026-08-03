@@ -9,8 +9,13 @@ interface AdminDashboardProps {
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ date }) => {
   const [analytics, setAnalytics] = useState<DepartmentAnalytics | null>(null);
+  const [coaches, setCoaches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Pricing configuration state
+  const [editingCoachId, setEditingCoachId] = useState<number | null>(null);
+  const [editPricing, setEditPricing] = useState({ baseFare: 100, ratePerStation: 50, windowSurcharge: 100 });
 
   // Coach configuration modal state
   const [showAddCoach, setShowAddCoach] = useState(false);
@@ -24,8 +29,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ date }) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await ApiService.getAdminAnalytics(date);
+      const [data, coachesData] = await Promise.all([
+        ApiService.getAdminAnalytics(date),
+        ApiService.getCoaches(),
+      ]);
       setAnalytics(data);
+      setCoaches(coachesData);
     } catch (err: any) {
       setError(err.message || 'Failed to load department analytics');
     } finally {
@@ -219,6 +228,86 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ date }) => {
             </div>
           </form>
         )}
+      </div>
+
+      {/* Pricing Configuration Banner */}
+      <div className="glass-card" style={{ padding: '24px', marginTop: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '20px' }}>
+          <div>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <DollarSign size={20} color="var(--accent-emerald)" />
+              Dynamic Coach Pricing Configuration
+            </h3>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+              Override standard fares per coach and set custom window surcharges.
+            </p>
+          </div>
+        </div>
+
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid var(--glass-border)', textAlign: 'left', color: 'var(--text-muted)' }}>
+                <th style={{ padding: '12px 8px' }}>Coach Name</th>
+                <th style={{ padding: '12px 8px' }}>Class</th>
+                <th style={{ padding: '12px 8px' }}>Base Fare (LKR)</th>
+                <th style={{ padding: '12px 8px' }}>Rate/Station (LKR)</th>
+                <th style={{ padding: '12px 8px' }}>Window Surcharge (LKR)</th>
+                <th style={{ padding: '12px 8px' }}>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {coaches.map((coach) => (
+                <tr key={coach.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                  <td style={{ padding: '12px 8px', fontWeight: 600 }}>{coach.name}</td>
+                  <td style={{ padding: '12px 8px' }}>{coach.classType.replace('_', ' ')}</td>
+                  
+                  {editingCoachId === coach.id ? (
+                    <>
+                      <td style={{ padding: '8px' }}>
+                        <input type="number" className="input-field" style={{ width: '90px', padding: '6px' }} value={editPricing.baseFare} onChange={(e) => setEditPricing({ ...editPricing, baseFare: parseFloat(e.target.value) })} />
+                      </td>
+                      <td style={{ padding: '8px' }}>
+                        <input type="number" className="input-field" style={{ width: '90px', padding: '6px' }} value={editPricing.ratePerStation} onChange={(e) => setEditPricing({ ...editPricing, ratePerStation: parseFloat(e.target.value) })} />
+                      </td>
+                      <td style={{ padding: '8px' }}>
+                        <input type="number" className="input-field" style={{ width: '90px', padding: '6px' }} value={editPricing.windowSurcharge} onChange={(e) => setEditPricing({ ...editPricing, windowSurcharge: parseFloat(e.target.value) })} />
+                      </td>
+                      <td style={{ padding: '8px', display: 'flex', gap: '8px' }}>
+                        <button className="btn-primary" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={async () => {
+                          try {
+                            await ApiService.updateCoachPricing(coach.id, editPricing);
+                            setEditingCoachId(null);
+                            fetchAnalytics();
+                          } catch (e: any) {
+                            alert(e.message);
+                          }
+                        }}>Save</button>
+                        <button className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={() => setEditingCoachId(null)}>Cancel</button>
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td style={{ padding: '12px 8px' }}>{coach.baseFare ?? 100}</td>
+                      <td style={{ padding: '12px 8px' }}>{coach.ratePerStation ?? 50}</td>
+                      <td style={{ padding: '12px 8px' }}>{coach.windowSurcharge ?? 100}</td>
+                      <td style={{ padding: '12px 8px' }}>
+                        <button className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={() => {
+                          setEditingCoachId(coach.id);
+                          setEditPricing({
+                            baseFare: coach.baseFare ?? 100,
+                            ratePerStation: coach.ratePerStation ?? 50,
+                            windowSurcharge: coach.windowSurcharge ?? 100,
+                          });
+                        }}>Edit</button>
+                      </td>
+                    </>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
     </div>

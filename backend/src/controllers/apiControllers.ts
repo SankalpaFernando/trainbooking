@@ -38,6 +38,41 @@ export class ApiControllers {
   }
 
   /**
+   * PUT /api/admin/coaches/:id/pricing
+   */
+  public static async updateCoachPricing(req: Request, res: Response) {
+    try {
+      const coachId = parseInt(req.params.id, 10);
+      const { baseFare, ratePerStation, windowSurcharge } = req.body;
+
+      if (isNaN(coachId)) {
+        return res.status(400).json({ success: false, error: 'Invalid coach ID' });
+      }
+
+      if (baseFare === undefined || ratePerStation === undefined || windowSurcharge === undefined) {
+        return res.status(400).json({ success: false, error: 'Missing pricing parameters' });
+      }
+
+      const updatedCoach = await prisma.coach.update({
+        where: { id: coachId },
+        data: {
+          baseFare: parseFloat(baseFare),
+          ratePerStation: parseFloat(ratePerStation),
+          windowSurcharge: parseFloat(windowSurcharge),
+        },
+      });
+
+      // We should ideally invalidate the segment availability cache here as fares might be cached,
+      // but fares are mostly calculated on the fly or embedded. We can clear today's cache if needed.
+      // SegmentService.rebuildAndCacheSeatsAvailability(new Date().toISOString().split('T')[0]);
+
+      return res.json({ success: true, data: updatedCoach });
+    } catch (e: any) {
+      return res.status(500).json({ success: false, error: e.message });
+    }
+  }
+
+  /**
    * GET /api/seats/availability?date=2026-08-01&originId=1&destinationId=8&coachId=1
    */
   public static async getSeatsAvailability(req: Request, res: Response) {

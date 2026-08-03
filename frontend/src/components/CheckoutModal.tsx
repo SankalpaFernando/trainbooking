@@ -34,11 +34,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [timeLeft, setTimeLeft] = useState<number>(300);
 
   const getLegFare = (seat: SeatGapSummary) => {
-    const baseFare = 100;
-    const ratePerStation = 50;
+    const baseFare = seat.baseFare ?? 100;
+    const ratePerStation = seat.ratePerStation ?? 50;
+    const windowSurchargeRate = seat.windowSurcharge ?? 100;
+    
     const stationsTraversed = Math.abs(destinationStation.sequenceNumber - originStation.sequenceNumber);
     const multiplier = seat.classType === 'FIRST_CLASS' ? 1.5 : seat.classType === 'SECOND_CLASS' ? 1.2 : 1;
-    const windowSurcharge = seat.isWindowSeat ? 100 : 0;
+    const windowSurcharge = seat.isWindowSeat ? windowSurchargeRate : 0;
     return Math.round((baseFare + stationsTraversed * ratePerStation * multiplier + windowSurcharge) * 100) / 100;
   };
 

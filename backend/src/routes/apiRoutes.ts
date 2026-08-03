@@ -73,5 +73,6 @@ router.post('/waitlist', ApiControllers.addToWaitlist);
 // Department Admin Portal
 router.get('/admin/analytics', requireAdminAuth, ApiControllers.getAdminAnalytics);
 router.post('/admin/coaches', requireAdminAuth, ApiControllers.createCoach);
+router.put('/admin/coaches/:id/pricing', requireAdminAuth, ApiControllers.updateCoachPricing);
 
 export default router;
