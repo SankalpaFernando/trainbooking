@@ -66,6 +66,22 @@ export const InteractiveSeatMap: React.FC<InteractiveSeatMapProps> = ({
 
   const hasAnyAvailableSeat = seats.some((s) => s.isAvailableForRequestedLeg);
 
+  // Group seats by row based on coach class type for proper grid rendering
+  let seatsPerRow = 6;
+  let aisleAfter = 3;
+  if (activeCoach?.classType === 'FIRST_CLASS') {
+    seatsPerRow = 4;
+    aisleAfter = 2;
+  } else if (activeCoach?.classType === 'SECOND_CLASS') {
+    seatsPerRow = 5;
+    aisleAfter = 2;
+  }
+
+  const seatRows: SeatGapSummary[][] = [];
+  for (let i = 0; i < coachSeats.length; i += seatsPerRow) {
+    seatRows.push(coachSeats.slice(i, i + seatsPerRow));
+  }
+
   return (
     <div className="glass-card" style={{ padding: '24px', marginBottom: '24px' }}>
       
@@ -198,98 +214,90 @@ export const InteractiveSeatMap: React.FC<InteractiveSeatMapProps> = ({
 
         {/* Seat Grid */}
         <div style={{
-          display: 'grid',
-          gridTemplateColumns: activeCoach?.classType === 'FIRST_CLASS' 
-            ? '1fr 1fr 40px 1fr 1fr' 
-            : activeCoach?.classType === 'SECOND_CLASS'
-            ? '1fr 1fr 40px 1fr 1fr 1fr'
-            : '1fr 1fr 1fr 40px 1fr 1fr 1fr',
+          display: 'flex',
+          flexDirection: 'column',
           gap: '14px',
           maxWidth: '540px',
           margin: '0 auto',
         }}>
-          {coachSeats.map((seat, index) => {
-            const isSelected = selectedSeats.some((selected) => selected.seatId === seat.seatId);
-            
-            // Calculate grid column positioning to create an aisle
-            const numMatch = seat.seatNumber.match(/\d+/);
-            const num = numMatch ? parseInt(numMatch[0]) : (index + 1);
-            let seatsPerRow = 6;
-            let aisleAfter = 3;
-            
-            if (activeCoach?.classType === 'FIRST_CLASS') {
-              seatsPerRow = 4;
-              aisleAfter = 2;
-            } else if (activeCoach?.classType === 'SECOND_CLASS') {
-              seatsPerRow = 5;
-              aisleAfter = 2;
-            }
-            
-            const positionInRow = ((num - 1) % seatsPerRow) + 1;
-            // If the seat is AFTER the aisle, we shift it one column to the right
-            const gridColumnStart = positionInRow > aisleAfter ? positionInRow + 1 : positionInRow;
-            const isOccupiedOnLeg = !seat.isAvailableForRequestedLeg;
-            const isPartialUsedOtherLeg = seat.occupiedIntervals.length > 0 && !isOccupiedOnLeg;
+          {seatRows.map((row, rowIndex) => (
+            <div key={`row-${rowIndex}`} style={{ display: 'flex', gap: '14px', justifyContent: 'center' }}>
+              {row.map((seat, seatIndex) => {
+                const isSelected = selectedSeats.some((selected) => selected.seatId === seat.seatId);
+                const isOccupiedOnLeg = !seat.isAvailableForRequestedLeg;
+                const isPartialUsedOtherLeg = seat.occupiedIntervals.length > 0 && !isOccupiedOnLeg;
 
-            let buttonClass = 'seat-button seat-available';
-            if (isSelected) buttonClass = 'seat-button seat-selected';
-            else if (isOccupiedOnLeg) buttonClass = 'seat-button seat-occupied';
-            else if (isPartialUsedOtherLeg) buttonClass = 'seat-button seat-partial';
+                let buttonClass = 'seat-button seat-available';
+                if (isSelected) buttonClass = 'seat-button seat-selected';
+                else if (isOccupiedOnLeg) buttonClass = 'seat-button seat-occupied';
+                else if (isPartialUsedOtherLeg) buttonClass = 'seat-button seat-partial';
 
-            return (
-              <div key={seat.seatId} style={{ position: 'relative', gridColumnStart }}>
-                <button
-                  className={buttonClass}
-                  onClick={() => !isOccupiedOnLeg && onSelectSeat(seat)}
-                  onMouseEnter={() => setHoveredSeatId(seat.seatId)}
-                  onMouseLeave={() => setHoveredSeatId(null)}
-                  disabled={isOccupiedOnLeg}
-                  style={seat.isWindowSeat ? { borderColor: 'var(--accent-cyan)', borderWidth: '2px' } : {}}
-                >
-                  <div style={{ position: 'relative' }}>
-                    <Armchair size={16} />
-                    {seat.isWindowSeat && (
-                      <div style={{ position: 'absolute', top: '-6px', right: '-8px', color: 'var(--accent-cyan)' }}>
-                        <Sparkles size={10} />
-                      </div>
+                return (
+                  <React.Fragment key={seat.seatId}>
+                    {seatIndex === aisleAfter && (
+                      <div style={{ width: '40px' }} />
                     )}
-                  </div>
-                  <span>{seat.seatNumber.split('-')[1]}</span>
-                </button>
+                    <div style={{ position: 'relative', flex: 1, maxWidth: '64px' }}>
+                      <button
+                        className={buttonClass}
+                        onClick={() => !isOccupiedOnLeg && onSelectSeat(seat)}
+                        onMouseEnter={() => setHoveredSeatId(seat.seatId)}
+                        onMouseLeave={() => setHoveredSeatId(null)}
+                        disabled={isOccupiedOnLeg}
+                        style={{
+                          width: '100%',
+                          ...(seat.isWindowSeat ? { borderColor: 'var(--accent-cyan)', borderWidth: '2px' } : {})
+                        }}
+                      >
+                        <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                          <Armchair size={16} />
+                          {seat.isWindowSeat && (
+                            <div style={{ position: 'absolute', top: '-6px', right: '-8px', color: 'var(--accent-cyan)' }}>
+                              <Sparkles size={10} />
+                            </div>
+                          )}
+                        </div>
+                        <span style={{ display: 'block', textAlign: 'center', marginTop: '4px' }}>
+                          {seat.seatNumber.split('-')[1]}
+                        </span>
+                      </button>
 
-                {/* Segment Occupancy Hover Tooltip */}
-                {hoveredSeatId === seat.seatId && (
-                  <div className="tooltip-box">
-                    <div style={{ fontWeight: 700, color: 'var(--accent-cyan)', marginBottom: '4px' }}>
-                      Seat {seat.seatNumber} ({seat.coachName}) {seat.isWindowSeat && '🌟 Window Seat'}
+                      {/* Segment Occupancy Hover Tooltip */}
+                      {hoveredSeatId === seat.seatId && (
+                        <div className="tooltip-box" style={{ width: '220px', left: '50%', transform: 'translateX(-50%)' }}>
+                          <div style={{ fontWeight: 700, color: 'var(--accent-cyan)', marginBottom: '4px' }}>
+                            Seat {seat.seatNumber} ({seat.coachName}) {seat.isWindowSeat && '🌟 Window'}
+                          </div>
+                          {seat.isWindowSeat && (
+                            <div style={{ fontSize: '0.75rem', color: 'var(--accent-teal)', marginBottom: '4px' }}>
+                              +{seat.windowSurcharge ?? 100} LKR Surcharge
+                            </div>
+                          )}
+                          {seat.occupiedIntervals.length === 0 ? (
+                            <div style={{ color: 'var(--accent-emerald)' }}>✨ Completely Unbooked across entire line</div>
+                          ) : (
+                            <div>
+                              <div style={{ fontWeight: 600, fontSize: '0.7rem', color: 'var(--text-muted)' }}>Occupied Legs:</div>
+                              {seat.occupiedIntervals.map((occ, idx) => (
+                                <div key={idx} style={{ color: 'var(--accent-amber)', fontSize: '0.72rem' }}>
+                                  • {getStationName(occ.startSeq)} → {getStationName(occ.endSeq)}
+                                </div>
+                              ))}
+                              {isPartialUsedOtherLeg && (
+                                <div style={{ color: 'var(--accent-emerald)', marginTop: '4px', fontWeight: 600 }}>
+                                  ✅ Available for your leg!
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
-                    {seat.isWindowSeat && (
-                      <div style={{ fontSize: '0.75rem', color: 'var(--accent-teal)', marginBottom: '4px' }}>
-                        +{seat.windowSurcharge ?? 100} LKR Window Surcharge
-                      </div>
-                    )}
-                    {seat.occupiedIntervals.length === 0 ? (
-                      <div style={{ color: 'var(--accent-emerald)' }}>✨ Completely Unbooked across entire line</div>
-                    ) : (
-                      <div>
-                        <div style={{ fontWeight: 600, fontSize: '0.7rem', color: 'var(--text-muted)' }}>Occupied Legs on this Journey:</div>
-                        {seat.occupiedIntervals.map((occ, idx) => (
-                          <div key={idx} style={{ color: 'var(--accent-amber)', fontSize: '0.72rem' }}>
-                            • {getStationName(occ.startSeq)} → {getStationName(occ.endSeq)}
-                          </div>
-                        ))}
-                        {isPartialUsedOtherLeg && (
-                          <div style={{ color: 'var(--accent-emerald)', marginTop: '4px', fontWeight: 600 }}>
-                            ✅ Available for your leg! ({originStation?.name} → {destStation?.name})
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                  </React.Fragment>
+                );
+              })}
+            </div>
+          ))}
         </div>
 
         {/* Coach Corridor Aisle indicator */}
