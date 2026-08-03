@@ -43,7 +43,7 @@ export const MixedTicketCard: React.FC<MixedTicketCardProps> = ({
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
+      <div style={{ display: 'grid',gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '16px' }}>
         {recommendations.map((rec, idx) => (
           <div
             key={idx}
