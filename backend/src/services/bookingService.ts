@@ -149,8 +149,8 @@ export class BookingService {
       bookingStatusCounter.inc({ status: 'pending_hold' });
       logger.info({ pnr: booking.pnr, status: booking.status }, 'Created pending hold booking');
 
-      // 5. Rebuild CQRS Cache in background
-      SegmentService.rebuildAndCacheSeatsAvailability(dto.date).catch((err) => logger.warn({ err }, 'Failed to rebuild CQRS cache'));
+      // 5. Rebuild CQRS Cache for this specific seat in background
+      SegmentService.updateSeatAvailabilityInCache(dto.date, dto.seatId).catch((err) => logger.warn({ err }, 'Failed to update granular CQRS cache'));
 
       return booking;
     } finally {
@@ -197,7 +197,8 @@ export class BookingService {
 
     bookingStatusCounter.inc({ status: 'confirmed' });
     logger.info({ pnr: confirmed.pnr, status: confirmed.status }, 'Booking confirmed');
-    SegmentService.rebuildAndCacheSeatsAvailability(booking.date).catch((err) => logger.warn({ err }, 'Failed to rebuild CQRS cache'));
+    // Status change from PENDING to CONFIRMED doesn't change availability gaps, but we can update it just in case.
+    SegmentService.updateSeatAvailabilityInCache(booking.date, booking.seatId).catch((err) => logger.warn({ err }, 'Failed to update granular CQRS cache'));
 
     return confirmed;
   }
@@ -330,7 +331,11 @@ export class BookingService {
 
       bookingStatusCounter.inc({ status: 'pending_hold' }, bookings.length);
       logger.info({ count: bookings.length, date: dto.date }, 'Created multi-leg pending hold booking');
-      SegmentService.rebuildAndCacheSeatsAvailability(dto.date).catch((err) => logger.warn({ err }, 'Failed to rebuild CQRS cache'));
+      
+      for (const leg of dto.legs) {
+        SegmentService.updateSeatAvailabilityInCache(dto.date, leg.seatId).catch((err) => logger.warn({ err }, 'Failed to update granular CQRS cache'));
+      }
+      
       return bookings;
     } finally {
       await this.asyncReleaseSeatLocks(acquiredLocks);
@@ -393,8 +398,8 @@ export class BookingService {
     if (newlyConfirmedCount > 0) {
       bookingStatusCounter.inc({ status: 'confirmed' }, newlyConfirmedCount);
       logger.info({ count: newlyConfirmedCount }, 'Multi-leg bookings confirmed');
-      for (const dateStr of datesToRebuild) {
-        SegmentService.rebuildAndCacheSeatsAvailability(dateStr).catch((err) => logger.warn({ err }, 'Failed to rebuild CQRS cache'));
+      for (const booking of confirmedBookings) {
+        SegmentService.updateSeatAvailabilityInCache(booking.date, booking.seatId).catch((err) => logger.warn({ err }, 'Failed to update granular CQRS cache'));
       }
     }
 

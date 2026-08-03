@@ -70,31 +70,27 @@ export class SegmentService {
     return { occupied, gaps };
   }
 
-  /**
-   * Retrieves seat availability across all seats for a specific date and requested leg [reqStart, reqEnd].
-   * Uses Redis CQRS cache if available, falling back to DB and populating Redis cache.
-   */
   public static async getSeatsAvailability(
     date: string,
     reqStart: number,
     reqEnd: number,
     coachIdFilter?: number
   ): Promise<SeatGapSummary[]> {
-    const cacheKey = `cache:seats:${date}`;
+    const cacheKey = `cache:seatGaps:${date}`;
     
-    // Check Redis CQRS Cache
-    let cachedData: string | null = null;
+    // Check Redis Hash Cache
+    let cachedStrings: string[] = [];
     try {
-      cachedData = await redis.get(cacheKey);
+      cachedStrings = await redis.hvals(cacheKey);
     } catch (e) {
       console.warn('Redis read failed, falling back to database query:', e);
     }
 
-    let summaries: SeatGapSummary[];
+    let summaries: SeatGapSummary[] = [];
 
-    if (cachedData) {
+    if (cachedStrings.length > 0) {
       cacheHitsCounter.inc();
-      const allSummaries: SeatGapSummary[] = JSON.parse(cachedData);
+      const allSummaries: SeatGapSummary[] = cachedStrings.map(s => JSON.parse(s));
       summaries = allSummaries.map((s) => ({
         ...s,
         isAvailableForRequestedLeg: !s.occupiedIntervals.some((occ) =>
@@ -181,13 +177,86 @@ export class SegmentService {
       };
     });
 
-    // Write to Redis CQRS cache with 60-second TTL
+    // Write to Redis Hash cache
     try {
-      await redis.set(`cache:seats:${date}`, JSON.stringify(summaries), 'EX', 60);
+      const cacheKey = `cache:seatGaps:${date}`;
+      const pipeline = redis.pipeline();
+      for (const summary of summaries) {
+        pipeline.hset(cacheKey, String(summary.seatId), JSON.stringify(summary));
+      }
+      pipeline.expire(cacheKey, 3600); // 1 hour TTL for the hash
+      await pipeline.exec();
     } catch (e) {
-      console.warn('Failed to set Redis CQRS cache:', e);
+      console.warn('Failed to set Redis Hash cache:', e);
     }
 
     return summaries;
+  }
+
+  /**
+   * Updates a single seat's availability in the granular Redis Hash cache.
+   * Called by BookingService upon booking creation/confirmation/expiration.
+   */
+  public static async updateSeatAvailabilityInCache(date: string, seatId: number): Promise<void> {
+    try {
+      const cacheKey = `cache:seatGaps:${date}`;
+      const exists = await redis.exists(cacheKey);
+      if (!exists) {
+        // Cache is empty, no need to update granularly, it will rebuild on next fetch
+        return;
+      }
+
+      const minStation = await prisma.station.findFirst({ orderBy: { sequenceNumber: 'asc' } });
+      const maxStation = await prisma.station.findFirst({ orderBy: { sequenceNumber: 'desc' } });
+      const minSeq = minStation ? minStation.sequenceNumber : 1;
+      const maxSeq = maxStation ? maxStation.sequenceNumber : 18;
+
+      const seat = await prisma.seat.findUnique({
+        where: { id: seatId },
+        include: {
+          coach: true,
+          bookings: {
+            where: {
+              date,
+              status: { in: [BookingStatus.CONFIRMED, BookingStatus.PENDING] },
+            },
+            select: {
+              startStationSeq: true,
+              endStationSeq: true,
+            },
+          },
+        },
+      });
+
+      if (!seat) return;
+
+      const { occupied, gaps } = this.calculateGaps(seat.bookings, minSeq, maxSeq);
+      const isFullyAvailableForRoute = gaps.length === 1 && gaps[0].startSeq === minSeq && gaps[0].endSeq === maxSeq;
+      const numMatch = seat.seatNumber.match(/\d+/);
+      const num = numMatch ? parseInt(numMatch[0]) : 0;
+      const isWindowSeat = num > 0 && (num % 6 === 1 || num % 6 === 0);
+      const coachData = seat.coach as any;
+
+      const summary: SeatGapSummary = {
+        seatId: seat.id,
+        seatNumber: seat.seatNumber,
+        coachId: seat.coachId,
+        coachName: seat.coach.name,
+        coachType: seat.coach.type,
+        classType: seat.coach.classType,
+        occupiedIntervals: occupied,
+        availableGaps: gaps,
+        isFullyAvailableForRoute,
+        isAvailableForRequestedLeg: true, // Will be dynamically computed on fetch
+        isWindowSeat,
+        baseFare: coachData.baseFare ?? 100,
+        ratePerStation: coachData.ratePerStation ?? 50,
+        windowSurcharge: coachData.windowSurcharge ?? 100,
+      };
+
+      await redis.hset(cacheKey, String(seatId), JSON.stringify(summary));
+    } catch (e) {
+      console.warn(`Failed to update granular Redis cache for seat ${seatId}:`, e);
+    }
   }
 }
