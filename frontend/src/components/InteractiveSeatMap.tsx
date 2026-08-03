@@ -61,7 +61,7 @@ export const InteractiveSeatMap: React.FC<InteractiveSeatMapProps> = ({
     return number % 4 === 1 || number % 4 === 0;
   };
 
-  const getCoachFare = (classType: Coach['classType']) => {
+  const getCoachFare = (classType: Coach['classType'], coachId: number) => {
     if (!fareEstimate) return null;
     const specificCoachSeats = seats.filter(s => s.coachId === coachId);
     const firstSeat = specificCoachSeats[0];
