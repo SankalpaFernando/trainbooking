@@ -2,6 +2,7 @@ import { SegmentService, SeatGapSummary } from './segmentService';
 import { FareService } from './fareService';
 import { ClassType } from '@prisma/client';
 import { trace } from '@opentelemetry/api';
+import { redis } from './db';
 
 export interface LegOption {
   seatId: number;
@@ -37,15 +38,18 @@ export class GapFinderService {
   ): Promise<MixedTicketRecommendation[]> {
     const activeSpan = trace.getTracer('railway-booking').startSpan('gap_finder.calculate_hops');
     try {
-      const seatSummaries = await SegmentService.getSeatsAvailability(date, reqStart, reqEnd);
-
-      const hasDirectSeat = seatSummaries.some((s) =>
-        s.availableGaps.some((gap) => gap.startSeq <= reqStart && gap.endSeq >= reqEnd)
-      );
-
-      if (hasDirectSeat) {
-        return [];
+      const cacheKey = `cache:mixed:${date}:${reqStart}:${reqEnd}`;
+      
+      try {
+        const cachedData = await redis.get(cacheKey);
+        if (cachedData) {
+          return JSON.parse(cachedData);
+        }
+      } catch (e) {
+        console.warn('Redis read failed for mixed tickets, falling back to calculation:', e);
       }
+
+      const seatSummaries = await SegmentService.getSeatsAvailability(date, reqStart, reqEnd);
 
       // Use any seat with availability inside the requested route window so the recommendation
       // can mix classes (first, second, third) and fill the gaps between reqStart and reqEnd.
@@ -119,6 +123,12 @@ export class GapFinderService {
             fare: legFares[index],
           })),
         }));
+
+      try {
+        await redis.set(cacheKey, JSON.stringify(recommendations), 'EX', 60);
+      } catch (e) {
+        console.warn('Failed to set Redis CQRS cache for mixed tickets:', e);
+      }
 
       return recommendations;
     } finally {
