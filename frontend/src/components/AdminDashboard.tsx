@@ -312,6 +312,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ date }) => {
             </tbody>
           </table>
         </div>
+      </div>
+
       {/* Ticket Checkers Configuration */}
       <div className="glass-card" style={{ padding: '24px', marginTop: '24px' }}>
         <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '16px' }}>Manage Ticket Checkers</h3>
