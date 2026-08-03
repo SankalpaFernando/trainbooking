@@ -50,28 +50,23 @@ export class GapFinderService {
         return [];
       }
 
-      const baseFare = FareService.calculateFare({ startStationSeq: reqStart, endStationSeq: reqEnd }).baseFare;
-
       const recommendations = candidateRoutes
         .map((route) => {
           const legFares = route.map((leg) =>
-            FareService.calculateFare(
-              {
-                startStationSeq: leg.startSeq,
-                endStationSeq: leg.endSeq,
-                classType: leg.seat.classType as ClassType,
-                isWindowSeat: leg.seat.isWindowSeat,
-                pricing: {
-                  baseFare: leg.seat.baseFare,
-                  ratePerStation: leg.seat.ratePerStation,
-                  windowSurcharge: leg.seat.windowSurcharge,
-                },
+            FareService.calculateFare({
+              startStationSeq: leg.startSeq,
+              endStationSeq: leg.endSeq,
+              classType: leg.seat.classType as ClassType,
+              isWindowSeat: leg.seat.isWindowSeat,
+              pricing: {
+                baseFare: leg.seat.baseFare,
+                ratePerStation: leg.seat.ratePerStation,
+                windowSurcharge: leg.seat.windowSurcharge,
               },
-              { excludeBaseFare: true }
-            ).totalFare
+            }).totalFare
           );
 
-          const totalFare = Math.round((baseFare + legFares.reduce((sum, fare) => sum + fare, 0)) * 100) / 100;
+          const totalFare = Math.round((legFares.reduce((sum, fare) => sum + fare, 0)) * 100) / 100;
 
           return {
             route,
@@ -127,7 +122,9 @@ export class GapFinderService {
     const maxRoutes = 30;
 
     const addRoute = (route: CandidateLeg[]) => {
-      if (route.length === 0) return;
+      if (route.length <= 1) return;
+      if (route[0].startSeq !== reqStart || route[route.length - 1].endSeq !== reqEnd) return;
+
       const key = route.map((leg) => `${leg.seat.seatId}:${leg.startSeq}-${leg.endSeq}`).join('|');
       if (!routeKeys.has(key)) {
         routeKeys.add(key);
@@ -140,11 +137,11 @@ export class GapFinderService {
         return;
       }
 
-      if (route.length >= 1) {
+      if (route.length > 1 && currentSeq === reqEnd) {
         addRoute(route);
       }
 
-      if (route.length === maxLegs) {
+      if (route.length >= maxLegs || currentSeq === reqEnd) {
         return;
       }
 
@@ -178,13 +175,7 @@ export class GapFinderService {
       }
     };
 
-    for (const startPoint of sortedPoints) {
-      if (startPoint >= reqEnd) break;
-      dfs(startPoint, []);
-      if (routes.length >= maxRoutes) {
-        break;
-      }
-    }
+    dfs(reqStart, []);
 
     return routes;
   }
