@@ -25,6 +25,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ date }) => {
   const [totalSeats, setTotalSeats] = useState(24);
   const [prefix, setPrefix] = useState('X');
 
+  const [checkerUser, setCheckerUser] = useState('');
+  const [checkerPass, setCheckerPass] = useState('');
+  const [checkerMsg, setCheckerMsg] = useState('');
+
   const fetchAnalytics = async () => {
     setLoading(true);
     setError(null);
@@ -308,6 +312,33 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ date }) => {
             </tbody>
           </table>
         </div>
+      {/* Ticket Checkers Configuration */}
+      <div className="glass-card" style={{ padding: '24px', marginTop: '24px' }}>
+        <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '16px' }}>Manage Ticket Checkers</h3>
+        
+        <form onSubmit={async (e) => {
+          e.preventDefault();
+          try {
+            setCheckerMsg('');
+            await ApiService.createChecker(checkerUser, checkerPass);
+            setCheckerMsg('Ticket Checker created successfully!');
+            setCheckerUser('');
+            setCheckerPass('');
+          } catch (err: any) {
+            setCheckerMsg(err.message || 'Failed to create ticket checker');
+          }
+        }} style={{ display: 'flex', gap: '16px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+          <div>
+            <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Username</label>
+            <input type="text" required className="input-field" value={checkerUser} onChange={e => setCheckerUser(e.target.value)} />
+          </div>
+          <div>
+            <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Password</label>
+            <input type="password" required className="input-field" value={checkerPass} onChange={e => setCheckerPass(e.target.value)} />
+          </div>
+          <button type="submit" className="btn-primary">Create Account</button>
+        </form>
+        {checkerMsg && <div style={{ marginTop: '12px', fontSize: '0.85rem', color: checkerMsg.includes('success') ? 'var(--accent-emerald)' : 'var(--accent-rose)' }}>{checkerMsg}</div>}
       </div>
 
     </div>

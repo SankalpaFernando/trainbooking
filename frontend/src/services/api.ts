@@ -201,4 +201,40 @@ export class ApiService {
     if (!json.success) throw new Error(json.error);
     return json.data;
   }
+
+  // --- TICKET CHECKER & ADMIN API ---
+
+  public static async checkerLogin(username: string, password: string):Promise<{token: string, username: string}> {
+    const res = await fetch(`${API_BASE}/checker/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error);
+    return json.data;
+  }
+
+  public static async validateTicket(pnr: string): Promise<Booking> {
+    const res = await fetch(`${API_BASE}/checker/scan/${pnr}`);
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error);
+    return json.data;
+  }
+
+  public static async createChecker(username: string, password: string): Promise<void> {
+    const auth = localStorage.getItem('adminAuth');
+    if (!auth) throw new Error('Not authenticated');
+
+    const res = await fetch(`${API_BASE}/admin/checkers`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: auth,
+      },
+      body: JSON.stringify({ username, password }),
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error);
+  }
 }

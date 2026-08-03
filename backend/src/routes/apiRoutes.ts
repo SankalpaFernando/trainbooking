@@ -74,5 +74,10 @@ router.post('/waitlist', ApiControllers.addToWaitlist);
 router.get('/admin/analytics', requireAdminAuth, ApiControllers.getAdminAnalytics);
 router.post('/admin/coaches', requireAdminAuth, ApiControllers.createCoach);
 router.put('/admin/coaches/:id/pricing', requireAdminAuth, ApiControllers.updateCoachPricing);
+router.post('/admin/checkers', requireAdminAuth, ApiControllers.createChecker);
+
+// Ticket Checker Portal
+router.post('/checker/login', ApiControllers.checkerLogin);
+router.get('/checker/scan/:pnr', ApiControllers.validateTicket);
 
 export default router;

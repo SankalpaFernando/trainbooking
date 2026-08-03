@@ -1,9 +1,9 @@
 import React from 'react';
-import { Train, ShieldCheck, BarChart3, Ticket } from 'lucide-react';
+import { Train, ShieldCheck, BarChart3, Ticket, ScanLine } from 'lucide-react';
 
 interface HeaderProps {
-  activeTab: 'booking' | 'admin' | 'my-tickets';
-  setActiveTab: (tab: 'booking' | 'admin' | 'my-tickets') => void;
+  activeTab: 'booking' | 'admin' | 'my-tickets' | 'checker';
+  setActiveTab: (tab: 'booking' | 'admin' | 'my-tickets' | 'checker') => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
@@ -56,6 +56,15 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
           >
             <ShieldCheck size={16} />
             PNR Lookup
+          </button>
+
+          <button
+            onClick={() => setActiveTab('checker')}
+            className={activeTab === 'checker' ? 'btn-primary' : 'btn-secondary'}
+            style={{ padding: '8px 16px', fontSize: '0.88rem' }}
+          >
+            <ScanLine size={16} />
+            Scan QR
           </button>
 
           <button

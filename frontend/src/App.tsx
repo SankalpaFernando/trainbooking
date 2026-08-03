@@ -11,10 +11,11 @@ import { EReceiptModal } from './components/EReceiptModal';
 import { WaitlistModal } from './components/WaitlistModal';
 import { AdminDashboard } from './components/AdminDashboard';
 import { PNRLookup } from './components/PNRLookup';
-import { Train, ArrowRight, Lock } from 'lucide-react';
+import { TicketCheckerPortal } from './components/TicketCheckerPortal';
+import { Train, ArrowRight, Lock, ScanLine } from 'lucide-react';
 
 export const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'booking' | 'admin' | 'my-tickets'>('booking');
+  const [activeTab, setActiveTab] = useState<'booking' | 'admin' | 'my-tickets' | 'checker'>('booking');
 
   // Master data state
   const [stations, setStations] = useState<Station[]>([]);
@@ -38,7 +39,7 @@ export const App: React.FC = () => {
   const [showMixedCheckoutModal, setShowMixedCheckoutModal] = useState<boolean>(false);
   const [showReceiptModal, setShowReceiptModal] = useState<boolean>(false);
   const [showWaitlistModal, setShowWaitlistModal] = useState<boolean>(false);
-  const [confirmedBooking, setConfirmedBooking] = useState<Booking | null>(null);
+  const [confirmedBookings, setConfirmedBookings] = useState<Booking[]>([]);
   const [adminLoggedIn, setAdminLoggedIn] = useState<boolean>(false);
   const [adminUsername, setAdminUsername] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
@@ -122,7 +123,7 @@ export const App: React.FC = () => {
     setShowCheckoutModal(false);
     setSelectedSeats([]);
     if (bookings.length > 0) {
-      setConfirmedBooking(bookings[0]);
+      setConfirmedBookings(bookings);
       setShowReceiptModal(true);
     }
     handleSearch(); // Refresh availability grid
@@ -259,6 +260,8 @@ export const App: React.FC = () => {
           </div>
           <AdminDashboard date={date} />
         </div>
+      ) : activeTab === 'checker' ? (
+        <TicketCheckerPortal />
       ) : null}
 
       {/* Checkout Modal */}
@@ -282,11 +285,11 @@ export const App: React.FC = () => {
             setSelectedMixedTicket(null);
             setShowMixedCheckoutModal(false);
           }}
-          onSuccess={(confirmedBookings) => {
+          onSuccess={(confirmed) => {
             setShowMixedCheckoutModal(false);
             setSelectedMixedTicket(null);
-            if (confirmedBookings.length > 0) {
-              setConfirmedBooking(confirmedBookings[0]);
+            if (confirmed.length > 0) {
+              setConfirmedBookings(confirmed);
               setShowReceiptModal(true);
             }
             handleSearch();
@@ -295,9 +298,9 @@ export const App: React.FC = () => {
       )}
 
       {/* E-Receipt Modal */}
-      {showReceiptModal && confirmedBooking && (
+      {showReceiptModal && confirmedBookings.length > 0 && (
         <EReceiptModal
-          booking={confirmedBooking}
+          bookings={confirmedBookings}
           onClose={() => setShowReceiptModal(false)}
         />
       )}

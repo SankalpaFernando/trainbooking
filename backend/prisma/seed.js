@@ -148,6 +148,17 @@ async function main() {
   }
 
   console.log('Successfully seeded initial segment bookings demonstrating seat reuse.');
+
+  // 4. Seed initial Ticket Checker
+  await prisma.ticketChecker.upsert({
+    where: { username: 'checker_1' },
+    update: {},
+    create: {
+      username: 'checker_1',
+      password: 'password123', // In a real app this should be hashed
+    },
+  });
+  console.log('Successfully seeded default Ticket Checker account (checker_1 / password123).');
 }
 
 main()

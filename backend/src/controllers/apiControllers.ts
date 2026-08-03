@@ -374,4 +374,75 @@ export class ApiControllers {
       return res.status(400).json({ success: false, error: e.message });
     }
   }
+
+  // --- TICKET CHECKER & ADMIN ENDPOINTS ---
+
+  /**
+   * POST /api/checker/login
+   */
+  public static async checkerLogin(req: Request, res: Response) {
+    try {
+      const { username, password } = req.body;
+      const checker = await prisma.ticketChecker.findUnique({ where: { username } });
+      
+      if (!checker || checker.password !== password) {
+        return res.status(401).json({ success: false, error: 'Invalid credentials' });
+      }
+
+      // Simple token for demonstration (in production, use JWT)
+      const token = 'Checker ' + Buffer.from(`${username}:${password}`).toString('base64');
+      return res.json({ success: true, data: { token, username } });
+    } catch (e: any) {
+      return res.status(500).json({ success: false, error: e.message });
+    }
+  }
+
+  /**
+   * GET /api/checker/scan/:pnr
+   */
+  public static async validateTicket(req: Request, res: Response) {
+    try {
+      const { pnr } = req.params;
+      const booking = await prisma.booking.findUnique({
+        where: { pnr },
+        include: {
+          seat: { include: { coach: true } },
+          startStation: true,
+          endStation: true,
+        },
+      });
+
+      if (!booking) {
+        return res.status(404).json({ success: false, error: 'Ticket not found' });
+      }
+
+      return res.json({ success: true, data: booking });
+    } catch (e: any) {
+      return res.status(500).json({ success: false, error: e.message });
+    }
+  }
+
+  /**
+   * POST /api/admin/checkers
+   */
+  public static async createChecker(req: Request, res: Response) {
+    try {
+      const { username, password } = req.body;
+      if (!username || !password) {
+        return res.status(400).json({ success: false, error: 'Username and password required' });
+      }
+
+      const existing = await prisma.ticketChecker.findUnique({ where: { username } });
+      if (existing) {
+        return res.status(400).json({ success: false, error: 'Username already exists' });
+      }
+
+      const checker = await prisma.ticketChecker.create({
+        data: { username, password },
+      });
+      return res.json({ success: true, data: checker });
+    } catch (e: any) {
+      return res.status(500).json({ success: false, error: e.message });
+    }
+  }
 }

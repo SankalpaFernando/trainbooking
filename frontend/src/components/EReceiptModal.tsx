@@ -1,16 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Booking } from '../types';
-import { Download, Printer, CheckCircle, Train, ShieldCheck, X } from 'lucide-react';
+import { Download, Printer, CheckCircle, Train, ShieldCheck, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface EReceiptModalProps {
-  booking: Booking;
+  bookings: Booking[];
   onClose: () => void;
 }
 
-export const EReceiptModal: React.FC<EReceiptModalProps> = ({ booking, onClose }) => {
+export const EReceiptModal: React.FC<EReceiptModalProps> = ({ bookings, onClose }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
   const handlePrint = () => {
     window.print();
   };
+
+  const booking = bookings[currentIndex];
 
   return (
     <div style={{
@@ -117,24 +122,43 @@ export const EReceiptModal: React.FC<EReceiptModalProps> = ({ booking, onClose }
               <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Includes platform base + distance fee</span>
             </div>
 
-            {/* QR Code Graphic Representation */}
+            {/* Real QR Code */}
             <div style={{
-              width: '70px',
-              height: '70px',
               background: '#fff',
               padding: '6px',
               borderRadius: '8px',
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: '2px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}>
-              {Array.from({ length: 16 }).map((_, i) => (
-                <div key={i} style={{ background: i % 3 === 0 || i % 5 === 0 ? '#000' : '#fff' }}></div>
-              ))}
+              <QRCodeSVG value={booking.pnr} size={70} />
             </div>
           </div>
 
         </div>
+
+        {/* Multi-Ticket Navigation */}
+        {bookings.length > 1 && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', background: 'rgba(255,255,255,0.05)', padding: '8px 16px', borderRadius: '12px' }}>
+            <button
+              className="btn-secondary"
+              onClick={() => setCurrentIndex((i) => Math.max(0, i - 1))}
+              disabled={currentIndex === 0}
+            >
+              <ChevronLeft size={16} /> Prev Ticket
+            </button>
+            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+              Ticket {currentIndex + 1} of {bookings.length}
+            </div>
+            <button
+              className="btn-secondary"
+              onClick={() => setCurrentIndex((i) => Math.min(bookings.length - 1, i + 1))}
+              disabled={currentIndex === bookings.length - 1}
+            >
+              Next Ticket <ChevronRight size={16} />
+            </button>
+          </div>
+        )}
 
         {/* Modal Actions */}
         <div style={{ display: 'flex', gap: '12px', marginTop: '24px', justifyContent: 'flex-end' }}>
