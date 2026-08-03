@@ -237,4 +237,44 @@ export class ApiService {
     const json = await res.json();
     if (!json.success) throw new Error(json.error);
   }
+
+  public static async getCheckers(): Promise<any[]> {
+    const auth = localStorage.getItem('adminAuth');
+    if (!auth) throw new Error('Not authenticated');
+
+    const res = await fetch(`${API_BASE}/admin/checkers`, {
+      headers: { Authorization: auth },
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error);
+    return json.data;
+  }
+
+  public static async updateChecker(id: number, password: string): Promise<void> {
+    const auth = localStorage.getItem('adminAuth');
+    if (!auth) throw new Error('Not authenticated');
+
+    const res = await fetch(`${API_BASE}/admin/checkers/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: auth,
+      },
+      body: JSON.stringify({ password }),
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error);
+  }
+
+  public static async deleteChecker(id: number): Promise<void> {
+    const auth = localStorage.getItem('adminAuth');
+    if (!auth) throw new Error('Not authenticated');
+
+    const res = await fetch(`${API_BASE}/admin/checkers/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: auth },
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error);
+  }
 }

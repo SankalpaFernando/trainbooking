@@ -445,4 +445,55 @@ export class ApiControllers {
       return res.status(500).json({ success: false, error: e.message });
     }
   }
+
+  /**
+   * GET /api/admin/checkers
+   */
+  public static async getCheckers(req: Request, res: Response) {
+    try {
+      const checkers = await prisma.ticketChecker.findMany({
+        select: { id: true, username: true, createdAt: true },
+        orderBy: { id: 'asc' },
+      });
+      return res.json({ success: true, data: checkers });
+    } catch (e: any) {
+      return res.status(500).json({ success: false, error: e.message });
+    }
+  }
+
+  /**
+   * PUT /api/admin/checkers/:id
+   */
+  public static async updateChecker(req: Request, res: Response) {
+    try {
+      const id = parseInt(req.params.id, 10);
+      const { password } = req.body;
+      if (!password) {
+        return res.status(400).json({ success: false, error: 'Password required' });
+      }
+
+      const checker = await prisma.ticketChecker.update({
+        where: { id },
+        data: { password },
+      });
+      return res.json({ success: true, data: checker });
+    } catch (e: any) {
+      return res.status(500).json({ success: false, error: e.message });
+    }
+  }
+
+  /**
+   * DELETE /api/admin/checkers/:id
+   */
+  public static async deleteChecker(req: Request, res: Response) {
+    try {
+      const id = parseInt(req.params.id, 10);
+      await prisma.ticketChecker.delete({
+        where: { id },
+      });
+      return res.json({ success: true, data: { deleted: true } });
+    } catch (e: any) {
+      return res.status(500).json({ success: false, error: e.message });
+    }
+  }
 }

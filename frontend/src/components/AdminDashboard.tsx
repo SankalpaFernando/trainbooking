@@ -28,6 +28,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ date }) => {
   const [checkerUser, setCheckerUser] = useState('');
   const [checkerPass, setCheckerPass] = useState('');
   const [checkerMsg, setCheckerMsg] = useState('');
+  
+  const [checkers, setCheckers] = useState<any[]>([]);
+  const [editingCheckerId, setEditingCheckerId] = useState<number | null>(null);
+  const [editingCheckerPass, setEditingCheckerPass] = useState('');
+
+  const fetchCheckers = async () => {
+    try {
+      const data = await ApiService.getCheckers();
+      setCheckers(data);
+    } catch (e) {
+      console.error('Failed to load checkers', e);
+    }
+  };
 
   const fetchAnalytics = async () => {
     setLoading(true);
@@ -39,6 +52,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ date }) => {
       ]);
       setAnalytics(data);
       setCoaches(coachesData);
+      fetchCheckers();
     } catch (err: any) {
       setError(err.message || 'Failed to load department analytics');
     } finally {
@@ -326,10 +340,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ date }) => {
             setCheckerMsg('Ticket Checker created successfully!');
             setCheckerUser('');
             setCheckerPass('');
+            fetchCheckers();
           } catch (err: any) {
             setCheckerMsg(err.message || 'Failed to create ticket checker');
           }
-        }} style={{ display: 'flex', gap: '16px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+        }} style={{ display: 'flex', gap: '16px', alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: '24px' }}>
           <div>
             <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Username</label>
             <input type="text" required className="input-field" value={checkerUser} onChange={e => setCheckerUser(e.target.value)} />
@@ -340,7 +355,72 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ date }) => {
           </div>
           <button type="submit" className="btn-primary">Create Account</button>
         </form>
-        {checkerMsg && <div style={{ marginTop: '12px', fontSize: '0.85rem', color: checkerMsg.includes('success') ? 'var(--accent-emerald)' : 'var(--accent-rose)' }}>{checkerMsg}</div>}
+        {checkerMsg && <div style={{ marginBottom: '24px', fontSize: '0.85rem', color: checkerMsg.includes('success') ? 'var(--accent-emerald)' : 'var(--accent-rose)' }}>{checkerMsg}</div>}
+
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid var(--glass-border)', textAlign: 'left', color: 'var(--text-muted)' }}>
+                <th style={{ padding: '12px 8px', fontWeight: 600 }}>ID</th>
+                <th style={{ padding: '12px 8px', fontWeight: 600 }}>Username</th>
+                <th style={{ padding: '12px 8px', fontWeight: 600 }}>Created At</th>
+                <th style={{ padding: '12px 8px', fontWeight: 600 }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {checkers.map((checker) => (
+                <tr key={checker.id} style={{ borderBottom: '1px solid var(--glass-border)' }}>
+                  <td style={{ padding: '12px 8px' }}>#{checker.id}</td>
+                  <td style={{ padding: '12px 8px', fontWeight: 600 }}>{checker.username}</td>
+                  <td style={{ padding: '12px 8px' }}>{new Date(checker.createdAt).toLocaleString()}</td>
+                  <td style={{ padding: '12px 8px' }}>
+                    {editingCheckerId === checker.id ? (
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <input
+                          type="password"
+                          className="input-field"
+                          placeholder="New Password"
+                          style={{ padding: '6px 10px', fontSize: '0.8rem', width: '150px' }}
+                          value={editingCheckerPass}
+                          onChange={(e) => setEditingCheckerPass(e.target.value)}
+                        />
+                        <button className="btn-primary" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={async () => {
+                          try {
+                            if (!editingCheckerPass) return;
+                            await ApiService.updateChecker(checker.id, editingCheckerPass);
+                            setEditingCheckerId(null);
+                            setEditingCheckerPass('');
+                            alert('Password updated successfully');
+                          } catch (e: any) {
+                            alert(e.message || 'Update failed');
+                          }
+                        }}>Save</button>
+                        <button className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={() => setEditingCheckerId(null)}>Cancel</button>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={() => {
+                          setEditingCheckerId(checker.id);
+                          setEditingCheckerPass('');
+                        }}>Change Password</button>
+                        <button className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.8rem', borderColor: 'var(--accent-rose)', color: 'var(--accent-rose)' }} onClick={async () => {
+                          if (confirm(`Are you sure you want to delete checker ${checker.username}?`)) {
+                            try {
+                              await ApiService.deleteChecker(checker.id);
+                              fetchCheckers();
+                            } catch (e: any) {
+                              alert(e.message || 'Delete failed');
+                            }
+                          }
+                        }}>Delete</button>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
     </div>

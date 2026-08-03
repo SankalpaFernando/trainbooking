@@ -130,3 +130,9 @@ export interface DepartmentAnalytics {
   segmentMetrics: StationSegmentMetric[];
   coachMetrics: CoachRevenueMetric[];
 }
+
+export interface TicketChecker {
+  id: number;
+  username: string;
+  createdAt: string;
+}

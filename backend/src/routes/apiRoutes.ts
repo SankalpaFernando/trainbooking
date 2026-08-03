@@ -74,7 +74,10 @@ router.post('/waitlist', ApiControllers.addToWaitlist);
 router.get('/admin/analytics', requireAdminAuth, ApiControllers.getAdminAnalytics);
 router.post('/admin/coaches', requireAdminAuth, ApiControllers.createCoach);
 router.put('/admin/coaches/:id/pricing', requireAdminAuth, ApiControllers.updateCoachPricing);
+router.get('/admin/checkers', requireAdminAuth, ApiControllers.getCheckers);
 router.post('/admin/checkers', requireAdminAuth, ApiControllers.createChecker);
+router.put('/admin/checkers/:id', requireAdminAuth, ApiControllers.updateChecker);
+router.delete('/admin/checkers/:id', requireAdminAuth, ApiControllers.deleteChecker);
 
 // Ticket Checker Portal
 router.post('/checker/login', ApiControllers.checkerLogin);
