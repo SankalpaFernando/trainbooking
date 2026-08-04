@@ -1,0 +1,472 @@
+openapi: 3.0.0
+info:
+  title: Railway Seat Booking API
+  description: Segment-Based Railway Seat Booking API
+  version: 1.0.0
+servers:
+  - url: /api
+    description: Main API Server
+paths:
+  /stations:
+    get:
+      summary: Get all stations
+      tags:
+        - Master Data
+      responses:
+        '200':
+          description: A list of railway stations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Station'
+  /coaches:
+    get:
+      summary: Get all coaches
+      tags:
+        - Master Data
+      responses:
+        '200':
+          description: A list of train coaches
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Coach'
+  /seats/availability:
+    get:
+      summary: Search for seat availability
+      tags:
+        - Search
+      parameters:
+        - in: query
+          name: date
+          schema:
+            type: string
+            format: date
+          required: true
+        - in: query
+          name: originId
+          schema:
+            type: integer
+          required: true
+        - in: query
+          name: destinationId
+          schema:
+            type: integer
+          required: true
+        - in: query
+          name: coachId
+          schema:
+            type: integer
+          required: false
+      responses:
+        '200':
+          description: Seat availability data
+        '400':
+          description: Validation error
+  /seats/mixed-tickets:
+    get:
+      summary: Find gap/mixed ticket recommendations
+      tags:
+        - Search
+      parameters:
+        - in: query
+          name: date
+          schema:
+            type: string
+            format: date
+          required: true
+        - in: query
+          name: originId
+          schema:
+            type: integer
+          required: true
+        - in: query
+          name: destinationId
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: Mixed ticket recommendations
+  /bookings/hold:
+    post:
+      summary: Hold a seat
+      tags:
+        - Booking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - seatId
+                - date
+                - startStationId
+                - endStationId
+                - guestName
+                - guestNic
+                - guestMobile
+                - captchaToken
+              properties:
+                seatId:
+                  type: integer
+                date:
+                  type: string
+                startStationId:
+                  type: integer
+                endStationId:
+                  type: integer
+                guestName:
+                  type: string
+                guestNic:
+                  type: string
+                guestMobile:
+                  type: string
+                captchaToken:
+                  type: string
+      responses:
+        '200':
+          description: Seat held successfully
+  /bookings/confirm:
+    post:
+      summary: Confirm a held booking
+      tags:
+        - Booking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - pnr
+              properties:
+                pnr:
+                  type: string
+      responses:
+        '200':
+          description: Booking confirmed
+  /bookings/hold-multi:
+    post:
+      summary: Hold multiple seats for a mixed ticket
+      tags:
+        - Booking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                date:
+                  type: string
+                guestName:
+                  type: string
+                guestNic:
+                  type: string
+                guestMobile:
+                  type: string
+                captchaToken:
+                  type: string
+                segments:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      seatId:
+                        type: integer
+                      startStationId:
+                        type: integer
+                      endStationId:
+                        type: integer
+      responses:
+        '200':
+          description: Seats held
+  /bookings/confirm-multi:
+    post:
+      summary: Confirm a multi-seat booking
+      tags:
+        - Booking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pnrs:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Multi-booking confirmed
+  /bookings/lookup/{pnr}:
+    get:
+      summary: Lookup booking by PNR
+      tags:
+        - Booking
+      parameters:
+        - in: path
+          name: pnr
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Booking details
+  /waitlist:
+    post:
+      summary: Join waitlist
+      tags:
+        - Booking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                date:
+                  type: string
+                startStationId:
+                  type: integer
+                endStationId:
+                  type: integer
+                coachId:
+                  type: integer
+                guestName:
+                  type: string
+                guestNic:
+                  type: string
+                guestMobile:
+                  type: string
+                guestEmail:
+                  type: string
+                captchaToken:
+                  type: string
+      responses:
+        '200':
+          description: Added to waitlist
+  /admin/analytics:
+    get:
+      summary: Get system analytics
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: date
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Analytics dashboard data
+  /admin/settings:
+    get:
+      summary: Get system settings
+      tags:
+        - Admin
+      responses:
+        '200':
+          description: Global configuration keys
+    put:
+      summary: Update system settings
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                settings:
+                  type: object
+                  additionalProperties:
+                    type: string
+      responses:
+        '200':
+          description: Settings updated
+  /admin/coaches:
+    post:
+      summary: Create a new coach
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Coach'
+      responses:
+        '200':
+          description: Coach created
+  /admin/checkers:
+    get:
+      summary: List ticket checkers
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of checkers
+    post:
+      summary: Create a ticket checker
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Checker created
+  /admin/checkers/{id}:
+    put:
+      summary: Update checker password
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Checker updated
+    delete:
+      summary: Delete ticket checker
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Checker deleted
+  /checker/login:
+    post:
+      summary: Ticket checker login
+      tags:
+        - Ticket Checker
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+  /checker/scan/{pnr}:
+    get:
+      summary: Validate a ticket by PNR
+      tags:
+        - Ticket Checker
+      parameters:
+        - in: path
+          name: pnr
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ticket details and validity
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Station:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        sequenceNumber:
+          type: integer
+        distanceKm:
+          type: number
+    Coach:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        type:
+          type: string
+          enum: [RESERVED, UNRESERVED]
+        classType:
+          type: string
+          enum: [FIRST_CLASS, SECOND_CLASS, THIRD_CLASS]
+        totalSeats:
+          type: integer
+        rows:
+          type: integer
+        seatsPerRow:
+          type: integer
+        baseFare:
+          type: number
+        ratePerStation:
+          type: number
+        windowSurcharge:
+          type: number
