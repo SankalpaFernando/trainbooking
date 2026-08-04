@@ -54,6 +54,14 @@ const bookingLimiter = strictRateLimiter({
   message: 'Too many booking attempts. Please slow down.',
 });
 
+// Daily strict limiter to prevent scalping
+const dailyBookingLimiter = strictRateLimiter({
+  windowSec: 86400, // 24 hours
+  maxRequests: 5,
+  prefix: 'daily_booking',
+  message: 'Daily booking limit reached. You can only create up to 5 bookings per day from this IP.',
+});
+
 // Strict limiter for login attempts
 const loginLimiter = strictRateLimiter({
   windowSec: 300,
@@ -101,8 +109,8 @@ router.get('/seats/availability', searchLimiter, ApiControllers.getSeatsAvailabi
 router.get('/seats/mixed-tickets', searchLimiter, ApiControllers.getMixedTickets);
 
 // Booking Transactions & Holds (rate limited)
-router.post('/bookings/hold', bookingLimiter, ApiControllers.createHoldBooking);
-router.post('/bookings/hold-multi', bookingLimiter, ApiControllers.createHoldMultiBooking);
+router.post('/bookings/hold', bookingLimiter, dailyBookingLimiter, ApiControllers.createHoldBooking);
+router.post('/bookings/hold-multi', bookingLimiter, dailyBookingLimiter, ApiControllers.createHoldMultiBooking);
 router.post('/bookings/confirm', bookingLimiter, ApiControllers.confirmBooking);
 router.post('/bookings/confirm-multi', bookingLimiter, ApiControllers.confirmMultiBooking);
 router.get('/bookings/lookup/:pnr', ApiControllers.lookupPNR);

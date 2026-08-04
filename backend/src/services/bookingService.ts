@@ -63,6 +63,18 @@ export class BookingService {
     }
 
     try {
+      // Mobile limit check
+      const activeBookingsForMobile = await prisma.booking.count({
+        where: {
+          guestMobile: dto.guestMobile,
+          date: dto.date,
+          status: { in: [BookingStatus.PENDING, BookingStatus.CONFIRMED] },
+        },
+      });
+      if (activeBookingsForMobile >= 2) {
+        throw new Error('Maximum of 2 bookings allowed per mobile number per date.');
+      }
+
       // 1. Fetch stations & seat
       const startStation = await prisma.station.findUnique({ where: { id: dto.startStationId } });
       const endStation = await prisma.station.findUnique({ where: { id: dto.endStationId } });
@@ -241,6 +253,18 @@ export class BookingService {
     const acquiredLocks = await this.asyncAcquireSeatLocks(dto.legs, dto.date);
 
     try {
+      // Mobile limit check
+      const activeBookingsForMobile = await prisma.booking.count({
+        where: {
+          guestMobile: dto.guestMobile,
+          date: dto.date,
+          status: { in: [BookingStatus.PENDING, BookingStatus.CONFIRMED] },
+        },
+      });
+      if (activeBookingsForMobile + dto.legs.length > 2) {
+        throw new Error('Maximum of 2 bookings allowed per mobile number per date.');
+      }
+
       const holdExpiresAt = new Date(Date.now() + this.HOLD_TTL_SECONDS * 1000);
 
       const bookings = await prisma.$transaction(async (tx) => {
