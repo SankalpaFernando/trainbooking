@@ -363,14 +363,9 @@ export const InteractiveSeatMap: React.FC<InteractiveSeatMapProps> = ({
               onMouseEnter={() => setHoveredSeatId(seat.seatId)}
               onMouseLeave={() => setHoveredSeatId(null)}
               disabled={isOccupiedOnLeg}
+              title={windowSeat && activeCoach ? `Class Fare: LKR ${getCoachFare(activeCoach.classType, activeCoach.id)?.toFixed(2)} | Window Surcharge: +LKR ${seat.windowSurcharge ?? 100}` : undefined}
               style={{
                 width: '100%',
-                ...(windowSeat
-                  ? {
-                      borderColor: 'var(--accent-cyan)',
-                      borderWidth: '2px',
-                    }
-                  : {}),
               }}
             >
               <div
