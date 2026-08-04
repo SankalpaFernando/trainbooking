@@ -19,16 +19,15 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, theme, 
         {/* Brand & Route Title */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           <div style={{
-            background: 'linear-gradient(135deg, #00f2fe, #4facfe)',
+            
             width: '46px',
             height: '46px',
             borderRadius: '12px',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 0 15px rgba(0, 242, 254, 0.4)'
+            justifyContent: 'center'
           }}>
-            <image src={logo} />
+            <img src={logo} width="46" height="46" />
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
