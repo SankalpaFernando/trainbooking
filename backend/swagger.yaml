@@ -323,18 +323,18 @@ paths:
       responses:
         '200':
           description: Coach created
-  /admin/checkers:
+  /admin/users:
     get:
-      summary: List ticket checkers
+      summary: List all users
       tags:
         - Admin
       security:
         - bearerAuth: []
       responses:
         '200':
-          description: List of checkers
+          description: List of users
     post:
-      summary: Create a ticket checker
+      summary: Create a user
       tags:
         - Admin
       security:
@@ -350,12 +350,15 @@ paths:
                   type: string
                 password:
                   type: string
+                role:
+                  type: string
+                  enum: [ADMIN, TICKET_CHECKER]
       responses:
         '200':
-          description: Checker created
-  /admin/checkers/{id}:
+          description: User created
+  /admin/users/{id}:
     put:
-      summary: Update checker password
+      summary: Update user (password or role)
       tags:
         - Admin
       security:
@@ -375,11 +378,14 @@ paths:
               properties:
                 password:
                   type: string
+                role:
+                  type: string
+                  enum: [ADMIN, TICKET_CHECKER]
       responses:
         '200':
-          description: Checker updated
+          description: User updated
     delete:
-      summary: Delete ticket checker
+      summary: Delete user
       tags:
         - Admin
       security:
@@ -392,7 +398,7 @@ paths:
             type: integer
       responses:
         '200':
-          description: Checker deleted
+          description: User deleted
   /checker/login:
     post:
       summary: Ticket checker login

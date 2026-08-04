@@ -25,11 +25,13 @@ export const AdminDashboard: React.FC = () => {
 
   const [checkerUser, setCheckerUser] = useState('');
   const [checkerPass, setCheckerPass] = useState('');
+  const [checkerRole, setCheckerRole] = useState<'ADMIN' | 'TICKET_CHECKER'>('TICKET_CHECKER');
   const [checkerMsg, setCheckerMsg] = useState('');
   
   const [checkers, setCheckers] = useState<any[]>([]);
   const [editingCheckerId, setEditingCheckerId] = useState<number | null>(null);
   const [editingCheckerPass, setEditingCheckerPass] = useState('');
+  const [editingCheckerRole, setEditingCheckerRole] = useState<'ADMIN' | 'TICKET_CHECKER'>('TICKET_CHECKER');
 
   // System Settings state
   const [settings, setSettings] = useState<Record<string, string>>({});
@@ -38,10 +40,10 @@ export const AdminDashboard: React.FC = () => {
 
   const fetchCheckers = async () => {
     try {
-      const data = await ApiService.getCheckers();
+      const data = await ApiService.getUsers();
       setCheckers(data);
     } catch (e) {
-      console.error('Failed to load checkers', e);
+      console.error('Failed to load users', e);
     }
   };
 
@@ -367,21 +369,22 @@ export const AdminDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Ticket Checkers Configuration */}
+      {/* Users Configuration */}
       <div className="glass-card" style={{ padding: '24px', marginTop: '24px' }}>
-        <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '16px' }}>Manage Ticket Checkers</h3>
+        <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '16px' }}>Manage User Accounts</h3>
         
         <form onSubmit={async (e) => {
           e.preventDefault();
           try {
             setCheckerMsg('');
-            await ApiService.createChecker(checkerUser, checkerPass);
-            setCheckerMsg('Ticket Checker created successfully!');
+            await ApiService.createUser(checkerUser, checkerPass, checkerRole);
+            setCheckerMsg('User created successfully!');
             setCheckerUser('');
             setCheckerPass('');
+            setCheckerRole('TICKET_CHECKER');
             fetchCheckers();
           } catch (err: any) {
-            setCheckerMsg(err.message || 'Failed to create ticket checker');
+            setCheckerMsg(err.message || 'Failed to create user');
           }
         }} style={{ display: 'flex', gap: '16px', alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: '24px' }}>
           <div>
@@ -391,6 +394,13 @@ export const AdminDashboard: React.FC = () => {
           <div>
             <label htmlFor="checkerPass" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Password</label>
             <input id="checkerPass" type="password" required className="input-field" value={checkerPass} onChange={e => setCheckerPass(e.target.value)} />
+          </div>
+          <div>
+            <label htmlFor="checkerRole" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Role</label>
+            <select id="checkerRole" className="input-field" value={checkerRole} onChange={e => setCheckerRole(e.target.value as any)}>
+              <option value="TICKET_CHECKER">Ticket Checker</option>
+              <option value="ADMIN">Admin</option>
+            </select>
           </div>
           <button type="submit" className="btn-primary">Create Account</button>
         </form>
@@ -402,6 +412,7 @@ export const AdminDashboard: React.FC = () => {
               <tr style={{ borderBottom: '1px solid var(--glass-border)', textAlign: 'left', color: 'var(--text-muted)' }}>
                 <th style={{ padding: '12px 8px', fontWeight: 600 }}>ID</th>
                 <th style={{ padding: '12px 8px', fontWeight: 600 }}>Username</th>
+                <th style={{ padding: '12px 8px', fontWeight: 600 }}>Role</th>
                 <th style={{ padding: '12px 8px', fontWeight: 600 }}>Created At</th>
                 <th style={{ padding: '12px 8px', fontWeight: 600 }}>Actions</th>
               </tr>
@@ -411,6 +422,7 @@ export const AdminDashboard: React.FC = () => {
                 <tr key={checker.id} style={{ borderBottom: '1px solid var(--glass-border)' }}>
                   <td style={{ padding: '12px 8px' }}>#{checker.id}</td>
                   <td style={{ padding: '12px 8px', fontWeight: 600 }}>{checker.username}</td>
+                  <td style={{ padding: '12px 8px' }}>{checker.role === 'ADMIN' ? 'Admin' : 'Ticket Checker'}</td>
                   <td style={{ padding: '12px 8px' }}>{new Date(checker.createdAt).toLocaleString()}</td>
                   <td style={{ padding: '12px 8px' }}>
                     {editingCheckerId === checker.id ? (
@@ -418,18 +430,27 @@ export const AdminDashboard: React.FC = () => {
                         <input
                           type="password"
                           className="input-field"
-                          placeholder="New Password"
+                          placeholder="New Password (optional)"
                           style={{ padding: '6px 10px', fontSize: '0.8rem', width: '150px' }}
                           value={editingCheckerPass}
                           onChange={(e) => setEditingCheckerPass(e.target.value)}
                         />
+                        <select
+                          className="input-field"
+                          style={{ padding: '6px 10px', fontSize: '0.8rem', width: '120px' }}
+                          value={editingCheckerRole}
+                          onChange={(e) => setEditingCheckerRole(e.target.value as any)}
+                        >
+                          <option value="TICKET_CHECKER">Ticket Checker</option>
+                          <option value="ADMIN">Admin</option>
+                        </select>
                         <button className="btn-primary" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={async () => {
                           try {
-                            if (!editingCheckerPass) return;
-                            await ApiService.updateChecker(checker.id, editingCheckerPass);
+                            await ApiService.updateUser(checker.id, editingCheckerPass || undefined, editingCheckerRole);
                             setEditingCheckerId(null);
                             setEditingCheckerPass('');
-                            alert('Password updated successfully');
+                            fetchCheckers();
+                            alert('User updated successfully');
                           } catch (e: any) {
                             alert(e.message || 'Update failed');
                           }
@@ -441,11 +462,12 @@ export const AdminDashboard: React.FC = () => {
                         <button className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={() => {
                           setEditingCheckerId(checker.id);
                           setEditingCheckerPass('');
-                        }}>Change Password</button>
+                          setEditingCheckerRole(checker.role);
+                        }}>Edit User</button>
                         <button className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.8rem', borderColor: 'var(--accent-rose)', color: 'var(--accent-rose)' }} onClick={async () => {
-                          if (confirm(`Are you sure you want to delete checker ${checker.username}?`)) {
+                          if (confirm(`Are you sure you want to delete user ${checker.username}?`)) {
                             try {
-                              await ApiService.deleteChecker(checker.id);
+                              await ApiService.deleteUser(checker.id);
                               fetchCheckers();
                             } catch (e: any) {
                               alert(e.message || 'Delete failed');

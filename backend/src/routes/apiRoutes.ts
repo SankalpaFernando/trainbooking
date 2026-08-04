@@ -150,10 +150,10 @@ router.put('/admin/settings', requireAdminAuth, ApiControllers.updateSettings); 
 router.post('/admin/coaches', requireAdminAuth, ApiControllers.createCoach);
 router.put('/admin/coaches/:id/pricing', requireAdminAuth, ApiControllers.updateCoachPricing);
 router.delete('/admin/coaches/:id', requireAdminAuth, ApiControllers.deleteCoach);
-router.get('/admin/checkers', requireAdminAuth, ApiControllers.getCheckers);
-router.post('/admin/checkers', requireAdminAuth, ApiControllers.createChecker);
-router.put('/admin/checkers/:id', requireAdminAuth, ApiControllers.updateChecker);
-router.delete('/admin/checkers/:id', requireAdminAuth, ApiControllers.deleteChecker);
+router.get('/admin/users', requireAdminAuth, ApiControllers.getUsers);
+router.post('/admin/users', requireAdminAuth, ApiControllers.createUser);
+router.put('/admin/users/:id', requireAdminAuth, ApiControllers.updateUser);
+router.delete('/admin/users/:id', requireAdminAuth, ApiControllers.deleteUser);
 
 // Ticket Checker Portal
 router.post('/checker/login', loginLimiter, ApiControllers.checkerLogin);

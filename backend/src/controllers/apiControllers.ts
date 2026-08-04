@@ -525,11 +525,11 @@ export class ApiControllers {
   }
 
   /**
-   * POST /api/admin/checkers
+   * POST /api/admin/users
    */
-  public static async createChecker(req: Request, res: Response) {
+  public static async createUser(req: Request, res: Response) {
     try {
-      const { username, password } = req.body;
+      const { username, password, role } = req.body;
       if (!username || !password) {
         return res.status(400).json({ success: false, error: 'Username and password required' });
       }
@@ -539,67 +539,75 @@ export class ApiControllers {
         return res.status(400).json({ success: false, error: 'Username already exists' });
       }
 
+      const userRole = role === 'ADMIN' ? Role.ADMIN : Role.TICKET_CHECKER;
       const hashedPassword = await bcrypt.hash(password, 10);
-      const checker = await prisma.user.create({
-        data: { username, password: hashedPassword, role: Role.TICKET_CHECKER },
+      const user = await prisma.user.create({
+        data: { username, password: hashedPassword, role: userRole },
       });
 
       // Remove password from response
-      const { password: _, ...checkerWithoutPassword } = checker;
-      return res.json({ success: true, data: checkerWithoutPassword });
+      const { password: _, ...userWithoutPassword } = user;
+      return res.json({ success: true, data: userWithoutPassword });
     } catch (e: any) {
       return res.status(500).json({ success: false, error: e.message });
     }
   }
 
   /**
-   * GET /api/admin/checkers
+   * GET /api/admin/users
    */
-  public static async getCheckers(req: Request, res: Response) {
+  public static async getUsers(req: Request, res: Response) {
     try {
-      const checkers = await prisma.user.findMany({
-        where: { role: Role.TICKET_CHECKER },
-        select: { id: true, username: true, createdAt: true },
+      const users = await prisma.user.findMany({
+        select: { id: true, username: true, role: true, createdAt: true },
         orderBy: { id: 'asc' },
       });
-      return res.json({ success: true, data: checkers });
+      return res.json({ success: true, data: users });
     } catch (e: any) {
       return res.status(500).json({ success: false, error: e.message });
     }
   }
 
   /**
-   * PUT /api/admin/checkers/:id
+   * PUT /api/admin/users/:id
    */
-  public static async updateChecker(req: Request, res: Response) {
+  public static async updateUser(req: Request, res: Response) {
     try {
       const id = parseInt(req.params.id, 10);
-      const { password } = req.body;
-      if (!password) {
-        return res.status(400).json({ success: false, error: 'Password required' });
+      const { password, role } = req.body;
+      
+      const updateData: any = {};
+      if (password) {
+        updateData.password = await bcrypt.hash(password, 10);
+      }
+      if (role && (role === 'ADMIN' || role === 'TICKET_CHECKER')) {
+        updateData.role = role;
       }
 
-      const hashedPassword = await bcrypt.hash(password, 10);
-      const checker = await prisma.user.update({
-        where: { id, role: Role.TICKET_CHECKER },
-        data: { password: hashedPassword },
+      if (Object.keys(updateData).length === 0) {
+        return res.status(400).json({ success: false, error: 'No update data provided' });
+      }
+
+      const user = await prisma.user.update({
+        where: { id },
+        data: updateData,
       });
 
-      const { password: _, ...checkerWithoutPassword } = checker;
-      return res.json({ success: true, data: checkerWithoutPassword });
+      const { password: _, ...userWithoutPassword } = user;
+      return res.json({ success: true, data: userWithoutPassword });
     } catch (e: any) {
       return res.status(500).json({ success: false, error: e.message });
     }
   }
 
   /**
-   * DELETE /api/admin/checkers/:id
+   * DELETE /api/admin/users/:id
    */
-  public static async deleteChecker(req: Request, res: Response) {
+  public static async deleteUser(req: Request, res: Response) {
     try {
       const id = parseInt(req.params.id, 10);
       await prisma.user.delete({
-        where: { id, role: Role.TICKET_CHECKER },
+        where: { id },
       });
       return res.json({ success: true, data: { deleted: true } });
     } catch (e: any) {
