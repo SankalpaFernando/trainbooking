@@ -946,18 +946,25 @@ The system seeds automatically with:
 
 To run the system, you **must set up** the following environment variables. You can add these to your `.env` file or export them directly in your environment.
 
+### Obtaining reCAPTCHA Keys
+To use Google reCAPTCHA v2 (Checkobox):
+1. Go to the [Google reCAPTCHA Admin Console](https://www.google.com/recaptcha/admin)
+2. Register a new site and select **reCAPTCHA v2** -> **"I'm not a robot" Checkbox**
+3. Add your domains (e.g., `localhost` or your production domain)
+4. Copy the **Site Key** (`VITE_RECAPTCHA_SITE_KEY`) and **Secret Key** (`RECAPTCHA_SECRET_KEY`) to your `.env` file.
+
 ```env
 # reCAPTCHA Configuration
-RECAPTCHA_SECRET_KEY=6Lcs_nEtAAAAAPV-yOoXYP03dy2TiwwQGKjyHge3
-VITE_RECAPTCHA_SITE_KEY=vsklgmleskmglewg
+RECAPTCHA_SECRET_KEY=your_recaptcha_secret_key
+VITE_RECAPTCHA_SITE_KEY=your_recaptcha_site_key
 
 # Application Environment
 NODE_ENV=development
 PORT=5001
 
 # Database & Cache
-DATABASE_URL=postgresql://postgres:postgres@db:5432/railway_booking?schema=public
-REDIS_URL=redis://redis:6379
+DATABASE_URL=postgresql://<user>:<password>@<host>:<port>/<dbname>?schema=public
+REDIS_URL=redis://<host>:<port>
 
 # Pricing & Booking Rules
 BASE_FARE=100
@@ -966,17 +973,17 @@ HOLD_TTL_SECONDS=300
 
 # Observability Stack
 OTEL_SERVICE_NAME=railway-booking-backend
-OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4318/v1/traces
-LOKI_URL=http://loki:3100
+OTEL_EXPORTER_OTLP_ENDPOINT=http://<tempo-host>:4318/v1/traces
+LOKI_URL=http://<loki-host>:3100
 
 # Database Initialization (for Docker Compose)
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_DB=railway_booking
+POSTGRES_USER=your_db_user
+POSTGRES_PASSWORD=your_db_password
+POSTGRES_DB=your_db_name
 
 # Admin Credentials
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=admin
+ADMIN_USERNAME=your_admin_username
+ADMIN_PASSWORD=your_admin_password
 ```
 ---
 
