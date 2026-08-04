@@ -9,6 +9,30 @@ import { ValidationService } from '../services/validationService';
 import { AnalyticsService } from '../services/analyticsService';
 import { BookingStatus, CoachType, ClassType } from '@prisma/client';
 
+const checkBookingDateAllowed = async (dateStr: string): Promise<string | null> => {
+  const setting = await prisma.systemSetting.findUnique({
+    where: { key: 'bookingWindowDays' }
+  });
+  
+  const windowDays = setting && setting.value ? parseInt(setting.value, 10) : 30; // default 30
+  
+  const today = new Date();
+  const maxDateObj = new Date(today.setDate(today.getDate() + windowDays));
+  
+  const start = new Date().toISOString().split('T')[0];
+  const end = maxDateObj.toISOString().split('T')[0];
+  
+  if (dateStr < start) {
+    return `Bookings are not open for past dates`;
+  }
+  
+  if (dateStr > end) {
+    return `Bookings can only be made up to ${windowDays} days in advance (max ${end})`;
+  }
+  
+  return null;
+};
+
 export class ApiControllers {
   /**
    * GET /api/stations
@@ -82,6 +106,11 @@ export class ApiControllers {
       const destinationId = parseInt(req.query.destinationId as string, 10);
       const coachIdFilter = req.query.coachId ? parseInt(req.query.coachId as string, 10) : undefined;
 
+      const dateError = await checkBookingDateAllowed(date);
+      if (dateError) {
+        return res.status(400).json({ success: false, error: dateError });
+      }
+
       if (isNaN(originId) || isNaN(destinationId)) {
         return res.status(400).json({ success: false, error: 'originId and destinationId query parameters are required' });
       }
@@ -142,6 +171,11 @@ export class ApiControllers {
       const originId = parseInt(req.query.originId as string, 10);
       const destinationId = parseInt(req.query.destinationId as string, 10);
 
+      const dateError = await checkBookingDateAllowed(date);
+      if (dateError) {
+        return res.status(400).json({ success: false, error: dateError });
+      }
+
       const startStation = await prisma.station.findUnique({ where: { id: originId } });
       const endStation = await prisma.station.findUnique({ where: { id: destinationId } });
 
@@ -170,6 +204,11 @@ export class ApiControllers {
 
       if (!seatId || !date || !startStationId || !endStationId || !guestName || !guestNic || !guestMobile || !captchaToken) {
         return res.status(400).json({ success: false, error: 'All fields including captchaToken are required' });
+      }
+
+      const dateError = await checkBookingDateAllowed(date);
+      if (dateError) {
+        return res.status(400).json({ success: false, error: dateError });
       }
 
       if (!ValidationService.isValidSriLankanNic(guestNic)) {
@@ -549,6 +588,55 @@ export class ApiControllers {
         where: { id },
       });
       return res.json({ success: true, data: { deleted: true } });
+    } catch (e: any) {
+      return res.status(500).json({ success: false, error: e.message });
+    }
+  }
+  /**
+   * GET /api/admin/settings
+   * Returns a map of system settings
+   */
+  public static async getSettings(req: Request, res: Response) {
+    try {
+      const settings = await prisma.systemSetting.findMany();
+      const settingsMap = settings.reduce((acc, curr) => {
+        acc[curr.key] = curr.value;
+        return acc;
+      }, {} as Record<string, string>);
+      return res.json({ success: true, data: settingsMap });
+    } catch (e: any) {
+      return res.status(500).json({ success: false, error: e.message });
+    }
+  }
+
+  /**
+   * PUT /api/admin/settings
+   */
+  public static async updateSettings(req: Request, res: Response) {
+    try {
+      const { settings } = req.body;
+      if (!settings || typeof settings !== 'object') {
+        return res.status(400).json({ success: false, error: 'Settings object required' });
+      }
+
+      const upserts = Object.entries(settings).map(([key, value]) => {
+        return prisma.systemSetting.upsert({
+          where: { key },
+          update: { value: String(value) },
+          create: { key, value: String(value) },
+        });
+      });
+
+      await prisma.$transaction(upserts);
+
+      // Fetch the updated settings to return
+      const updatedSettings = await prisma.systemSetting.findMany();
+      const settingsMap = updatedSettings.reduce((acc, curr) => {
+        acc[curr.key] = curr.value;
+        return acc;
+      }, {} as Record<string, string>);
+
+      return res.json({ success: true, data: settingsMap });
     } catch (e: any) {
       return res.status(500).json({ success: false, error: e.message });
     }

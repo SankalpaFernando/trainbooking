@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { DepartmentAnalytics } from '../types';
 import { ApiService } from '../services/api';
-import { BarChart3, DollarSign, Users, Activity, PlusCircle, Train, RefreshCw } from 'lucide-react';
+import { BarChart3, DollarSign, Users, Activity, PlusCircle, Train, RefreshCw, Settings } from 'lucide-react';
 
 interface AdminDashboardProps {
   date: string;
@@ -34,6 +34,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ date }) => {
   const [editingCheckerId, setEditingCheckerId] = useState<number | null>(null);
   const [editingCheckerPass, setEditingCheckerPass] = useState('');
 
+  // System Settings state
+  const [settings, setSettings] = useState<Record<string, string>>({});
+  const [bookingWindowDays, setBookingWindowDays] = useState<number>(30); // Default to 30 days
+  const [savingSettings, setSavingSettings] = useState(false);
+
   const fetchCheckers = async () => {
     try {
       const data = await ApiService.getCheckers();
@@ -47,12 +52,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ date }) => {
     setLoading(true);
     setError(null);
     try {
-      const [data, coachesData] = await Promise.all([
+      const [data, coachesData, settingsData] = await Promise.all([
         ApiService.getAdminAnalytics(date),
         ApiService.getCoaches(),
+        ApiService.getSettings(),
       ]);
       setAnalytics(data);
       setCoaches(coachesData);
+      setSettings(settingsData);
+      if (settingsData['bookingWindowDays']) {
+        setBookingWindowDays(parseInt(settingsData['bookingWindowDays'], 10));
+      }
       fetchCheckers();
     } catch (err: any) {
       setError(err.message || 'Failed to load department analytics');
@@ -442,6 +452,55 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ date }) => {
               ))}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      {/* System Settings Configuration */}
+      <div className="glass-card" style={{ padding: '32px', marginBottom: '32px' }}>
+        <h2 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent-emerald)' }}>
+          <Settings size={20} />
+          System Settings (Booking Horizon)
+        </h2>
+        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '24px' }}>
+          Configure how many days in advance passengers are allowed to book seats.
+        </p>
+
+        <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+          <div style={{ flex: 1, minWidth: '200px' }}>
+            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
+              Booking Window (Days)
+            </label>
+            <input
+              type="number"
+              min="1"
+              max="365"
+              className="input-field"
+              value={bookingWindowDays}
+              onChange={(e) => setBookingWindowDays(parseInt(e.target.value, 10) || 1)}
+            />
+          </div>
+          <div>
+            <button
+              className="btn-primary"
+              disabled={savingSettings}
+              style={{ height: '42px', padding: '0 24px' }}
+              onClick={async () => {
+                setSavingSettings(true);
+                try {
+                  await ApiService.updateSettings({
+                    bookingWindowDays: String(bookingWindowDays),
+                  });
+                  alert('Settings updated successfully');
+                } catch (e: any) {
+                  alert(e.message || 'Failed to update settings');
+                } finally {
+                  setSavingSettings(false);
+                }
+              }}
+            >
+              {savingSettings ? 'Saving...' : 'Save Settings'}
+            </button>
+          </div>
         </div>
       </div>
 

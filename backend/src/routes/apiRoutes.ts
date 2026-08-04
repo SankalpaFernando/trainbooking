@@ -112,6 +112,8 @@ router.post('/waitlist', bookingLimiter, ApiControllers.addToWaitlist);
 
 // Department Admin Portal
 router.get('/admin/analytics', requireAdminAuth, ApiControllers.getAdminAnalytics);
+router.get('/admin/settings', ApiControllers.getSettings); // Public read for frontend
+router.put('/admin/settings', requireAdminAuth, ApiControllers.updateSettings); // Admin only update
 router.post('/admin/coaches', requireAdminAuth, ApiControllers.createCoach);
 router.put('/admin/coaches/:id/pricing', requireAdminAuth, ApiControllers.updateCoachPricing);
 router.delete('/admin/coaches/:id', requireAdminAuth, ApiControllers.deleteCoach);

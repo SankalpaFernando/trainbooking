@@ -118,3 +118,9 @@ model TicketChecker {
   password  String
   createdAt DateTime @default(now())
 }
+
+model SystemSetting {
+  id    Int    @id @default(autoincrement())
+  key   String @unique
+  value String
+}

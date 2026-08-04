@@ -31,6 +31,7 @@ export const App: React.FC = () => {
   const [availability, setAvailability] = useState<AvailabilityResponseData | null>(null);
   const [mixedTickets, setMixedTickets] = useState<MixedTicketRecommendation[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [bookingLimits, setBookingLimits] = useState<{ start?: string; end?: string }>({});
 
   // Selection & Modal states
   const [selectedSeats, setSelectedSeats] = useState<SeatGapSummary[]>([]);
@@ -56,12 +57,20 @@ export const App: React.FC = () => {
   useEffect(() => {
     async function loadMasterData() {
       try {
-        const [stList, chList] = await Promise.all([
+        const [stList, chList, settingsData] = await Promise.all([
           ApiService.getStations(),
           ApiService.getCoaches(),
+          ApiService.getSettings().catch(() => ({})), // Non-fatal if fails
         ]);
         setStations(stList);
         setCoaches(chList);
+        const bookingWindowDays = parseInt(settingsData['bookingWindowDays'], 10) || 30; // default to 30
+        const today = new Date();
+        const maxDateObj = new Date(today.setDate(today.getDate() + bookingWindowDays));
+        const start = new Date().toISOString().split('T')[0];
+        const end = maxDateObj.toISOString().split('T')[0];
+        
+        setBookingLimits({ start, end });
         if (stList.length >= 8) {
           setOriginId(stList[0].id); // Colombo Fort
           setDestinationId(stList[7].id); // Kandy
@@ -204,6 +213,8 @@ export const App: React.FC = () => {
             onSearch={handleSearch}
             onSwapStations={handleSwapStations}
             loading={loading}
+            minDate={bookingLimits.start}
+            maxDate={bookingLimits.end}
           />
 
           {/* Interactive Seat Map */}

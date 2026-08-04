@@ -41,6 +41,27 @@ export class ApiService {
     return json.data;
   }
 
+  public static async getSettings(): Promise<Record<string, string>> {
+    const res = await fetch(`${API_BASE}/admin/settings`);
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error);
+    return json.data;
+  }
+
+  public static async updateSettings(settings: Record<string, string>): Promise<Record<string, string>> {
+    const res = await fetch(`${API_BASE}/admin/settings`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify({ settings }),
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error);
+    return json.data;
+  }
+
   public static async getSeatsAvailability(
     date: string,
     originId: number,

@@ -14,6 +14,8 @@ interface SearchPanelProps {
   onSearch: () => void;
   onSwapStations: () => void;
   loading: boolean;
+  minDate?: string;
+  maxDate?: string;
 }
 
 export const SearchPanel: React.FC<SearchPanelProps> = ({
@@ -28,10 +30,15 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
   onSearch,
   onSwapStations,
   loading,
+  minDate,
+  maxDate,
 }) => {
   const originStation = stations.find((s) => s.id === originId);
   const destStation = stations.find((s) => s.id === destinationId);
   const distance = originStation && destStation ? Math.abs(destStation.distanceKm - originStation.distanceKm) : 0;
+  
+  const defaultMinDate = new Date().toISOString().split('T')[0];
+  const effectiveMinDate = minDate && minDate > defaultMinDate ? minDate : defaultMinDate;
 
   return (
     <div className="glass-card" style={{ padding: '24px', marginBottom: '24px',marginTop: '24px' }}>
@@ -116,7 +123,8 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
             type="date"
             className="input-field"
             value={date}
-            min={new Date().toISOString().split('T')[0]}
+            min={effectiveMinDate}
+            max={maxDate}
             onChange={(e) => setDate(e.target.value)}
           />
         </div>
