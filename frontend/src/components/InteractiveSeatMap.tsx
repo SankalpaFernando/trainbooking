@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Coach, SeatGapSummary, Station, FareEstimate } from '../types';
 import { Armchair, Info, CheckCircle2, AlertTriangle, XCircle, Sparkles, Camera, Mountain, Map } from 'lucide-react';
 import { getScenicRecommendations } from '../utils/scenicRoutes';
+import { RouteTimeline } from './RouteTimeline';
 interface InteractiveSeatMapProps {
   coaches: Coach[];
   seats: SeatGapSummary[];
@@ -197,6 +198,15 @@ export const InteractiveSeatMap: React.FC<InteractiveSeatMapProps> = ({
           </div>
         </div>
       )}
+
+      {/* Visual Route Timeline */}
+      <RouteTimeline 
+        stations={stations} 
+        originId={originId} 
+        destinationId={destinationId} 
+        attractions={scenicRec ? scenicRec.attractions : []}
+        isGoingUp={originStation && destStation ? originStation.sequenceNumber < destStation.sequenceNumber : true}
+      />
 
       {/* Coach Selection Selector */}
       <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '8px', marginBottom: '20px' }}>

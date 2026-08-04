@@ -4,6 +4,7 @@ export interface ScenicAttraction {
   idealSideUp: 'LEFT' | 'RIGHT' | 'BOTH'; // UP means traveling from sequence 1 -> 18
   startSeq: number;
   endSeq: number;
+  imageUrl: string;
 }
 
 export const SCENIC_ATTRACTIONS: ScenicAttraction[] = [
@@ -13,6 +14,7 @@ export const SCENIC_ATTRACTIONS: ScenicAttraction[] = [
     idealSideUp: 'LEFT',
     startSeq: 6, // Rambukkana
     endSeq: 8,   // Kandy
+    imageUrl: 'https://images.unsplash.com/photo-1579730561578-1a52862d3a39?auto=format&fit=crop&q=80&w=600', // green hills train
   },
   {
     name: 'St. Clair\'s & Devon Falls',
@@ -20,6 +22,7 @@ export const SCENIC_ATTRACTIONS: ScenicAttraction[] = [
     idealSideUp: 'RIGHT',
     startSeq: 10, // Hatton
     endSeq: 11,   // Nanu Oya
+    imageUrl: 'https://images.unsplash.com/photo-1620606990499-d41c4840d8aa?auto=format&fit=crop&q=80&w=600', // waterfall tea estate
   },
   {
     name: 'Horton Plains & Pine Forests',
@@ -27,6 +30,7 @@ export const SCENIC_ATTRACTIONS: ScenicAttraction[] = [
     idealSideUp: 'BOTH',
     startSeq: 11, // Nanu Oya
     endSeq: 14,   // Haputale
+    imageUrl: 'https://images.unsplash.com/photo-1549474742-0056972740fc?auto=format&fit=crop&q=80&w=600', // foggy forest
   },
   {
     name: 'Haputale Gap & Thangamale',
@@ -34,6 +38,7 @@ export const SCENIC_ATTRACTIONS: ScenicAttraction[] = [
     idealSideUp: 'RIGHT',
     startSeq: 14, // Haputale
     endSeq: 17,   // Ella
+    imageUrl: 'https://images.unsplash.com/photo-1548489709-612fb8ce9019?auto=format&fit=crop&q=80&w=600', // wide mountain drop
   },
   {
     name: 'Demodara Nine Arch Bridge',
@@ -41,6 +46,7 @@ export const SCENIC_ATTRACTIONS: ScenicAttraction[] = [
     idealSideUp: 'LEFT',
     startSeq: 17, // Ella
     endSeq: 18,   // Badulla
+    imageUrl: 'https://images.unsplash.com/photo-1563852079040-e1cbfa2a9eb5?auto=format&fit=crop&q=80&w=600', // nine arch bridge
   }
 ];
 
