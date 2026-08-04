@@ -34,13 +34,14 @@ export class SegmentService {
     reqStart: number,
     reqEnd: number,
     existStart: number,
-    existEnd: number
+    existEnd: number,
+    ignoreDirection: boolean = false
   ): boolean {
     const isReqUp = reqStart < reqEnd;
     const isExistUp = existStart < existEnd;
     
     // Up and Down journeys do not overlap with each other
-    if (isReqUp !== isExistUp) return false;
+    if (!ignoreDirection && isReqUp !== isExistUp) return false;
 
     const normReqStart = Math.min(reqStart, reqEnd);
     const normReqEnd = Math.max(reqStart, reqEnd);
