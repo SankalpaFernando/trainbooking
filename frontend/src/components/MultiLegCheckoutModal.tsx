@@ -198,7 +198,7 @@ export const MultiLegCheckoutModal: React.FC<MultiLegCheckoutModalProps> = ({
               <div>LKR {leg.fare.toFixed(2)}</div>
             </div>
           ))}
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '12px', marginTop: '12px', fontWeight: 700, color: 'var(--accent-emerald)' }}>
+          <div style={{ borderTop: '1px solid var(--overlay-border)', paddingTop: '12px', marginTop: '12px', fontWeight: 700, color: 'var(--accent-emerald)' }}>
             Total: LKR {totalFare.toFixed(2)}
           </div>
         </div>

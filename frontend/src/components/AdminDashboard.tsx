@@ -296,7 +296,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ date }) => {
             </thead>
             <tbody>
               {coaches.map((coach) => (
-                <tr key={coach.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <tr key={coach.id} style={{ borderBottom: '1px solid var(--overlay-border)' }}>
                   <td style={{ padding: '12px 8px', fontWeight: 600 }}>{coach.name}</td>
                   <td style={{ padding: '12px 8px' }}>{coach.classType.replace('_', ' ')}</td>
                   
