@@ -95,12 +95,39 @@ export const App: React.FC = () => {
     }
   };
 
-  // Trigger search when master stations load
-  useEffect(() => {
-    if (stations.length > 0) {
-      handleSearch();
-    }
-  }, [stations]);
+  // Hide map when search parameters change
+  const handleSetOriginId = (id: number) => {
+    setOriginId(id);
+    setAvailability(null);
+    setMixedTickets([]);
+    setSelectedSeats([]);
+  };
+
+  const handleSetDestinationId = (id: number) => {
+    setDestinationId(id);
+    setAvailability(null);
+    setMixedTickets([]);
+    setSelectedSeats([]);
+  };
+
+  const handleSetDate = (d: string) => {
+    setDate(d);
+    setAvailability(null);
+    setMixedTickets([]);
+    setSelectedSeats([]);
+  };
+
+  // Swap origin and destination
+  const handleSwapStations = () => {
+    const tmpOrigin = originId;
+    setOriginId(destinationId);
+    setDestinationId(tmpOrigin);
+    setAvailability(null);
+    setMixedTickets([]);
+    setSelectedSeats([]);
+  };
+
+
 
   // Handle direct seat selection toggles multi-seat selection
   const handleSelectSeat = (seat: SeatGapSummary) => {
@@ -168,13 +195,14 @@ export const App: React.FC = () => {
           <SearchPanel
             stations={stations}
             originId={originId}
-            setOriginId={setOriginId}
+            setOriginId={handleSetOriginId}
             destinationId={destinationId}
-            setDestinationId={setDestinationId}
+            setDestinationId={handleSetDestinationId}
             date={date}
-            setDate={setDate}
+            setDate={handleSetDate}
             fareEstimate={availability?.fareEstimate}
             onSearch={handleSearch}
+            onSwapStations={handleSwapStations}
             loading={loading}
           />
 

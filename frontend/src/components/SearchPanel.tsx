@@ -1,6 +1,6 @@
 import React from 'react';
 import { Station, FareEstimate } from '../types';
-import { MapPin, Calendar, ArrowRight, DollarSign, Navigation } from 'lucide-react';
+import { MapPin, Calendar, ArrowLeftRight, DollarSign, Navigation } from 'lucide-react';
 
 interface SearchPanelProps {
   stations: Station[];
@@ -12,6 +12,7 @@ interface SearchPanelProps {
   setDate: (d: string) => void;
   fareEstimate?: FareEstimate;
   onSearch: () => void;
+  onSwapStations: () => void;
   loading: boolean;
 }
 
@@ -25,6 +26,7 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
   setDate,
   fareEstimate,
   onSearch,
+  onSwapStations,
   loading,
 }) => {
   const originStation = stations.find((s) => s.id === originId);
@@ -59,9 +61,30 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
           </select>
         </div>
 
-        {/* Arrow indicator */}
+        {/* Swap stations button */}
         <div className="mobile-hide" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', paddingBottom: '10px' }}>
-          <ArrowRight size={22} color="var(--accent-cyan)" />
+          <button
+            type="button"
+            onClick={onSwapStations}
+            title="Swap origin and destination"
+            style={{
+              background: 'rgba(0, 242, 254, 0.1)',
+              border: '1px solid rgba(0, 242, 254, 0.3)',
+              borderRadius: '50%',
+              width: '36px',
+              height: '36px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              color: 'var(--accent-cyan)',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0, 242, 254, 0.25)'; e.currentTarget.style.transform = 'rotate(180deg)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(0, 242, 254, 0.1)'; e.currentTarget.style.transform = 'rotate(0deg)'; }}
+          >
+            <ArrowLeftRight size={18} />
+          </button>
         </div>
 
         {/* Destination Station Dropdown */}
