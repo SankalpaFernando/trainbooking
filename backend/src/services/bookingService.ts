@@ -115,9 +115,9 @@ export class BookingService {
       // 3. Calculate Fare
       const numMatch = seat.seatNumber.match(/\d+/);
       const num = numMatch ? parseInt(numMatch[0]) : 0;
-      const isWindowSeat = num > 0 && (num % 6 === 1 || num % 6 === 0);
-
       const coachData = seat.coach as any;
+      const seatsPerRow = coachData.seatsPerRow ?? 4;
+      const isWindowSeat = num > 0 && (num % seatsPerRow === 1 || num % seatsPerRow === 0);
 
       const fareResult = FareService.calculateFare({
         startStationSeq: startStation.sequenceNumber,
@@ -306,9 +306,9 @@ export class BookingService {
 
           const numMatch = seat.seatNumber.match(/\d+/);
           const num = numMatch ? parseInt(numMatch[0]) : 0;
-          const isWindowSeat = num > 0 && (num % 6 === 1 || num % 6 === 0);
-
           const coachData = seat.coach as any;
+          const seatsPerRow = coachData.seatsPerRow ?? 4;
+          const isWindowSeat = num > 0 && (num % seatsPerRow === 1 || num % seatsPerRow === 0);
 
           const fareResult = FareService.calculateFare({
             startStationSeq: startStation.sequenceNumber,
