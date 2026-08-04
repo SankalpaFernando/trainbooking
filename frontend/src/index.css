@@ -37,6 +37,10 @@
   --overlay-dark: rgba(15, 23, 42, 0.85);
   --input-bg: rgba(15, 23, 42, 0.9);
 
+  --accent-cyan: #38bdf8;
+  --accent-teal: #2dd4bf;
+  --accent-rose: #fb7185;
+
   --text-main: #f8fafc;
   --text-muted: #cbd5e1;
   --text-dim: #94a3b8;
@@ -220,6 +224,13 @@ h1, h2, h3, h4, h5, h6 {
   border-color: rgba(244, 63, 94, 0.3);
   cursor: not-allowed;
   opacity: 0.6;
+}
+
+.dark .seat-occupied {
+  background: rgba(251, 113, 133, 0.15);
+  color: #ff9fb0;
+  border-color: rgba(251, 113, 133, 0.4);
+  opacity: 0.9;
 }
 
 .seat-partial {

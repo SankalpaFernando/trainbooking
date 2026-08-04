@@ -128,7 +128,7 @@ export const InteractiveSeatMap: React.FC<InteractiveSeatMapProps> = ({
             <span>Segment Reused (Free for leg)</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#f87171' }}></span>
+            <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: 'var(--accent-rose)' }}></span>
             <span>Leg Occupied</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
