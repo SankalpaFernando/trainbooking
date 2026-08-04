@@ -456,10 +456,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ date }) => {
       </div>
 
       {/* System Settings Configuration */}
-      <div className="glass-card" style={{ padding: '32px', marginBottom: '32px' }}>
+      <div className="glass-card" style={{ padding: '32px', marginBottom: '32px',marginTop:'20px' }}>
         <h2 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent-emerald)' }}>
           <Settings size={20} />
-          System Settings (Booking Horizon)
+          System Settings
         </h2>
         <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '24px' }}>
           Configure how many days in advance passengers are allowed to book seats.

@@ -30,7 +30,7 @@ export const PNRLookup: React.FC = () => {
   };
 
   return (
-    <div className="glass-card" style={{ padding: '32px', maxWidth: '640px', margin: '0 auto' }}>
+    <div className="glass-card" style={{ padding: '32px', maxWidth: '640px', margin: '0 auto',marginTop:'20px'  }}>
       <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--accent-cyan)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
         <ShieldCheck size={24} />
         PNR Ticket Verification & Lookup
