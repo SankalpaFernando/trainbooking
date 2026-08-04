@@ -65,7 +65,7 @@ export const WaitlistModal: React.FC<WaitlistModalProps> = ({
       left: 0,
       right: 0,
       bottom: 0,
-      background: 'rgba(0, 0, 0, 0.5)',
+      background: 'var(--overlay-dark)',
       backdropFilter: 'blur(12px)',
       display: 'flex',
       alignItems: 'center',

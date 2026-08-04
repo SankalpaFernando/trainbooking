@@ -216,7 +216,7 @@ export const InteractiveSeatMap: React.FC<InteractiveSeatMapProps> = ({
 
       {/* Physical Coach Layout Simulation */}
       <div style={{
-        background: 'rgba(0, 0, 0, 0.06)',
+        background: 'var(--overlay-bg)',
         borderRadius: '16px',
         padding: '24px',
         border: '1px solid var(--glass-border)',

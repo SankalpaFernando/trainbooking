@@ -131,7 +131,7 @@ export const TicketCheckerPortal: React.FC = () => {
           <h3 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Scan size={18} /> Scan QR Code
           </h3>
-          <div id="reader" style={{ width: '100%', marginBottom: '20px', background: 'rgba(0, 0, 0, 0.05)', borderRadius: '12px' }}></div>
+          <div id="reader" style={{ width: '100%', marginBottom: '20px', background: 'var(--overlay-bg)', borderRadius: '12px' }}></div>
           
           <div style={{ textAlign: 'center', margin: '16px 0', color: 'var(--text-muted)', fontSize: '0.8rem' }}>OR</div>
           

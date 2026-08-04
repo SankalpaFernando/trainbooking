@@ -134,7 +134,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       left: 0,
       right: 0,
       bottom: 0,
-      background: 'rgba(0, 0, 0, 0.5)',
+      background: 'var(--overlay-dark)',
       backdropFilter: 'blur(12px)',
       display: 'flex',
       alignItems: 'center',
@@ -192,7 +192,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             
             {/* Ticket Summary Box */}
             <div style={{
-              background: 'rgba(0, 0, 0, 0.04)',
+              background: 'var(--overlay-bg)',
               padding: '16px',
               borderRadius: '12px',
               border: '1px solid var(--glass-border)',
@@ -309,7 +309,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
             {/* PNR Hold Summary */}
             <div style={{
-              background: 'rgba(0, 0, 0, 0.04)',
+              background: 'var(--overlay-bg)',
               padding: '16px',
               borderRadius: '12px',
               border: '1px solid var(--glass-border)',

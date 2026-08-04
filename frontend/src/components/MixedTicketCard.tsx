@@ -48,7 +48,7 @@ export const MixedTicketCard: React.FC<MixedTicketCardProps> = ({
           <div
             key={idx}
             style={{
-              background: 'rgba(0, 0, 0, 0.05)',
+              background: 'var(--overlay-bg)',
               borderRadius: '14px',
               padding: '18px',
               border: '1px solid var(--glass-border)',
@@ -74,7 +74,7 @@ export const MixedTicketCard: React.FC<MixedTicketCardProps> = ({
                   <div
                     key={legIdx}
                     style={{
-                      background: 'rgba(0, 0, 0, 0.04)',
+                      background: 'var(--overlay-bg)',
                       padding: '10px 12px',
                       borderRadius: '8px',
                       fontSize: '0.84rem',

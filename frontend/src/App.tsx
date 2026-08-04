@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTheme } from './hooks/useTheme';
 import { Station, Coach, SeatGapSummary, AvailabilityResponseData, MixedTicketRecommendation, Booking } from './types';
 import { ApiService } from './services/api';
 import { Header } from './components/Header';
@@ -15,6 +16,7 @@ import { TicketCheckerPortal } from './components/TicketCheckerPortal';
 import { Train, ArrowRight, Lock, ScanLine } from 'lucide-react';
 
 export const App: React.FC = () => {
+  const { theme, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<'booking' | 'admin' | 'my-tickets' | 'checker'>('booking');
 
   // Master data state
@@ -202,7 +204,7 @@ export const App: React.FC = () => {
     <div style={{ maxWidth: '1240px', margin: '0 auto', padding: '0 20px 60px 20px' }}>
       
       {/* Top Header */}
-      <Header activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Header activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} toggleTheme={toggleTheme} />
 
       {/* Main Content Areas */}
       {activeTab === 'booking' && (
