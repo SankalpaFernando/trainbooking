@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { ApiControllers } from '../controllers/apiControllers';
 import { requestDurationHistogram } from '../services/observability';
+import { rateLimiter, strictRateLimiter } from '../services/rateLimiterService';
 
 const router = Router();
 
@@ -26,6 +27,43 @@ router.use((req, res, next) => {
   next();
 });
 
+// ---------- Rate Limiting ----------
+
+// Global baseline: 100 requests per minute per IP
+const globalLimiter = rateLimiter({
+  windowSec: 60,
+  maxRequests: 100,
+  prefix: 'global',
+  message: 'Too many requests from this IP. Please try again later.',
+});
+router.use(globalLimiter);
+
+// Strict limiter for search/availability (expensive DB + Redis queries)
+const searchLimiter = strictRateLimiter({
+  windowSec: 60,
+  maxRequests: 10,
+  prefix: 'search',
+  message: 'Too many search requests. Please wait before searching again.',
+});
+
+// Strict limiter for booking operations
+const bookingLimiter = strictRateLimiter({
+  windowSec: 60,
+  maxRequests: 5,
+  prefix: 'booking',
+  message: 'Too many booking attempts. Please slow down.',
+});
+
+// Strict limiter for login attempts
+const loginLimiter = strictRateLimiter({
+  windowSec: 300,
+  maxRequests: 5,
+  prefix: 'login',
+  message: 'Too many login attempts. Please try again in 5 minutes.',
+});
+
+// ---------- Admin Auth ----------
+
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || '';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
 
@@ -41,7 +79,9 @@ const requireAdminAuth = (req: any, res: any, next: any) => {
   return res.status(401).json({ success: false, error: 'Unauthorized' });
 };
 
-router.post('/admin/login', (req: any, res: any) => {
+// ---------- Routes ----------
+
+router.post('/admin/login', loginLimiter, (req: any, res: any) => {
   const { username, password } = req.body || {};
 
   if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
@@ -56,19 +96,19 @@ router.post('/admin/login', (req: any, res: any) => {
 router.get('/stations', ApiControllers.getStations);
 router.get('/coaches', ApiControllers.getCoaches);
 
-// Seat Availability & Mixed Ticket Gap Finder
-router.get('/seats/availability', ApiControllers.getSeatsAvailability);
-router.get('/seats/mixed-tickets', ApiControllers.getMixedTickets);
+// Seat Availability & Mixed Ticket Gap Finder (rate limited)
+router.get('/seats/availability', searchLimiter, ApiControllers.getSeatsAvailability);
+router.get('/seats/mixed-tickets', searchLimiter, ApiControllers.getMixedTickets);
 
-// Booking Transactions & Holds
-router.post('/bookings/hold', ApiControllers.createHoldBooking);
-router.post('/bookings/hold-multi', ApiControllers.createHoldMultiBooking);
-router.post('/bookings/confirm', ApiControllers.confirmBooking);
-router.post('/bookings/confirm-multi', ApiControllers.confirmMultiBooking);
+// Booking Transactions & Holds (rate limited)
+router.post('/bookings/hold', bookingLimiter, ApiControllers.createHoldBooking);
+router.post('/bookings/hold-multi', bookingLimiter, ApiControllers.createHoldMultiBooking);
+router.post('/bookings/confirm', bookingLimiter, ApiControllers.confirmBooking);
+router.post('/bookings/confirm-multi', bookingLimiter, ApiControllers.confirmMultiBooking);
 router.get('/bookings/lookup/:pnr', ApiControllers.lookupPNR);
 
 // Waitlist
-router.post('/waitlist', ApiControllers.addToWaitlist);
+router.post('/waitlist', bookingLimiter, ApiControllers.addToWaitlist);
 
 // Department Admin Portal
 router.get('/admin/analytics', requireAdminAuth, ApiControllers.getAdminAnalytics);
@@ -81,7 +121,8 @@ router.put('/admin/checkers/:id', requireAdminAuth, ApiControllers.updateChecker
 router.delete('/admin/checkers/:id', requireAdminAuth, ApiControllers.deleteChecker);
 
 // Ticket Checker Portal
-router.post('/checker/login', ApiControllers.checkerLogin);
+router.post('/checker/login', loginLimiter, ApiControllers.checkerLogin);
 router.get('/checker/scan/:pnr', ApiControllers.validateTicket);
 
 export default router;
+
