@@ -3,63 +3,38 @@ import { QrCode, Scan, ShieldCheck, XCircle, ChevronLeft } from 'lucide-react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { ApiService } from '../services/api';
 
-export const TicketCheckerPortal: React.FC = () => {
-  const [token, setToken] = useState<string | null>(localStorage.getItem('checkerToken'));
-  const [username, setUsername] = useState<string>(localStorage.getItem('checkerUsername') || '');
-  
-  const [loginUser, setLoginUser] = useState('');
-  const [loginPass, setLoginPass] = useState('');
-  const [loginError, setLoginError] = useState('');
-  
+interface TicketCheckerPortalProps {
+  username: string;
+}
+
+export const TicketCheckerPortal: React.FC<TicketCheckerPortalProps> = ({ username }) => {
   const [scanResult, setScanResult] = useState<any>(null);
   const [scanError, setScanError] = useState<string | null>(null);
   const [manualPnr, setManualPnr] = useState('');
 
   useEffect(() => {
-    if (token) {
-      // Initialize scanner
-      const scanner = new Html5QrcodeScanner(
-        "reader",
-        { fps: 10, qrbox: { width: 250, height: 250 } },
-        false
-      );
+    // Initialize scanner
+    const scanner = new Html5QrcodeScanner(
+      "reader",
+      { fps: 10, qrbox: { width: 250, height: 250 } },
+      false
+    );
 
-      scanner.render(
-        (decodedText) => {
-          handleValidatePnr(decodedText);
-        },
-        (error) => {
-          // parse errors are normal while scanning
-        }
-      );
+    scanner.render(
+      (decodedText) => {
+        handleValidatePnr(decodedText);
+      },
+      (error) => {
+        // parse errors are normal while scanning
+      }
+    );
 
-      return () => {
-        scanner.clear().catch(console.error);
-      };
-    }
-  }, [token]);
+    return () => {
+      scanner.clear().catch(console.error);
+    };
+  }, []);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      setLoginError('');
-      const res = await ApiService.checkerLogin(loginUser, loginPass);
-      localStorage.setItem('checkerToken', res.token);
-      localStorage.setItem('checkerUsername', res.username);
-      setToken(res.token);
-      setUsername(res.username);
-    } catch (err: any) {
-      setLoginError(err.message || 'Login failed');
-    }
-  };
 
-  const handleLogout = () => {
-    localStorage.removeItem('checkerToken');
-    localStorage.removeItem('checkerUsername');
-    setToken(null);
-    setUsername('');
-    setScanResult(null);
-  };
 
   const handleValidatePnr = async (pnrToValidate: string) => {
     try {
@@ -80,41 +55,6 @@ export const TicketCheckerPortal: React.FC = () => {
     }
   };
 
-  if (!token) {
-    return (
-      <div style={{ padding: '40px 20px', maxWidth: '400px', margin: '0 auto' }}>
-        <div className="glass-card" style={{ padding: '30px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-            <ShieldCheck size={48} color="var(--accent-teal)" style={{ margin: '0 auto 16px auto' }} />
-            <h2 style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--text-main)' }}>Ticket Checker Login</h2>
-          </div>
-          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <input
-              aria-label="Username"
-              type="text"
-              placeholder="Username"
-              className="input-field"
-              value={loginUser}
-              onChange={(e) => setLoginUser(e.target.value)}
-              required
-            />
-            <input
-              aria-label="Password"
-              type="password"
-              placeholder="Password"
-              className="input-field"
-              value={loginPass}
-              onChange={(e) => setLoginPass(e.target.value)}
-              required
-            />
-            {loginError && <div aria-live="polite" style={{ color: 'var(--accent-rose)', fontSize: '0.85rem' }}>{loginError}</div>}
-            <button type="submit" className="btn-primary" style={{ justifyContent: 'center' }}>Login</button>
-          </form>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
@@ -124,7 +64,6 @@ export const TicketCheckerPortal: React.FC = () => {
           </h2>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Logged in as: <strong>{username}</strong></p>
         </div>
-        <button onClick={handleLogout} className="btn-secondary">Logout</button>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>

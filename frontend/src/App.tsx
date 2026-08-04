@@ -17,7 +17,7 @@ import { Train, ArrowRight, Lock, ScanLine } from 'lucide-react';
 
 export const App: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
-  const [activeTab, setActiveTab] = useState<'booking' | 'admin' | 'my-tickets' | 'checker'>('booking');
+  const [activeTab, setActiveTab] = useState<'booking' | 'admin' | 'my-tickets' | 'checker' | 'login'>('booking');
 
   // Master data state
   const [stations, setStations] = useState<Station[]>([]);
@@ -45,14 +45,26 @@ export const App: React.FC = () => {
   const [showWaitlistModal, setShowWaitlistModal] = useState<boolean>(false);
   const [confirmedBookings, setConfirmedBookings] = useState<Booking[]>([]);
   const [adminLoggedIn, setAdminLoggedIn] = useState<boolean>(false);
-  const [adminUsername, setAdminUsername] = useState('');
-  const [adminPassword, setAdminPassword] = useState('');
-  const [adminError, setAdminError] = useState('');
+  const [checkerLoggedIn, setCheckerLoggedIn] = useState<boolean>(false);
+  const [checkerUsername, setCheckerUsername] = useState<string>('');
+  
+  const [loginRole, setLoginRole] = useState<'admin' | 'checker'>('admin');
+  const [loginUser, setLoginUser] = useState('');
+  const [loginPass, setLoginPass] = useState('');
+  const [loginError, setLoginError] = useState('');
 
   useEffect(() => {
     const storedAuth = localStorage.getItem('adminAuth');
     if (storedAuth) {
       setAdminLoggedIn(true);
+      setActiveTab('admin');
+    }
+    const storedCheckerToken = localStorage.getItem('checkerToken');
+    const storedCheckerUser = localStorage.getItem('checkerUsername');
+    if (storedCheckerToken && storedCheckerUser) {
+      setCheckerLoggedIn(true);
+      setCheckerUsername(storedCheckerUser);
+      setActiveTab('checker');
     }
   }, []);
 
@@ -177,26 +189,36 @@ export const App: React.FC = () => {
   const originStation = stations.find((s) => s.id === originId) || stations[0];
   const destStation = stations.find((s) => s.id === destinationId) || stations[7];
 
-  const handleAdminLogin = async (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const username = adminUsername.trim();
-    const password = adminPassword;
-
+    setLoginError('');
     try {
-      await ApiService.adminLogin(username, password);
-      setAdminLoggedIn(true);
-      setAdminError('');
-      setAdminPassword('');
-      setAdminUsername('');
+      if (loginRole === 'admin') {
+        await ApiService.adminLogin(loginUser.trim(), loginPass);
+        setAdminLoggedIn(true);
+        setActiveTab('admin');
+      } else {
+        const res = await ApiService.checkerLogin(loginUser.trim(), loginPass);
+        localStorage.setItem('checkerToken', res.token);
+        localStorage.setItem('checkerUsername', res.username);
+        setCheckerLoggedIn(true);
+        setCheckerUsername(res.username);
+        setActiveTab('checker');
+      }
+      setLoginUser('');
+      setLoginPass('');
     } catch (err: any) {
-      setAdminError(err.message || 'Login failed');
+      setLoginError(err.message || 'Login failed');
     }
   };
 
-  const handleAdminLogout = () => {
+  const handleLogout = () => {
     localStorage.removeItem('adminAuth');
+    localStorage.removeItem('checkerToken');
+    localStorage.removeItem('checkerUsername');
     setAdminLoggedIn(false);
-    setAdminError('');
+    setCheckerLoggedIn(false);
+    setCheckerUsername('');
     setActiveTab('booking');
   };
 
@@ -204,7 +226,15 @@ export const App: React.FC = () => {
     <div style={{ maxWidth: '1240px', margin: '0 auto', padding: '0 20px 60px 20px' }}>
       
       {/* Top Header */}
-      <Header activeTab={activeTab} setActiveTab={setActiveTab} theme={theme} toggleTheme={toggleTheme} />
+      <Header 
+        activeTab={activeTab as any} 
+        setActiveTab={setActiveTab as any} 
+        theme={theme} 
+        toggleTheme={toggleTheme} 
+        adminLoggedIn={adminLoggedIn}
+        checkerLoggedIn={checkerLoggedIn}
+        onLogout={handleLogout}
+      />
 
       {/* Main Content Areas */}
       {activeTab === 'booking' && (
@@ -282,44 +312,69 @@ export const App: React.FC = () => {
       {/* PNR Lookup Tab */}
       {activeTab === 'my-tickets' && <PNRLookup />}
 
-      {/* Department Admin Analytics Tab */}
-      {activeTab === 'admin' && !adminLoggedIn ? (
+      {/* Staff Login Tab */}
+      {activeTab === 'login' && !adminLoggedIn && !checkerLoggedIn && (
         <div className="glass-card" style={{ padding: '32px', maxWidth: '420px', margin: '24px auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
             <Lock size={20} color="var(--accent-cyan)" />
-            <h3 style={{ fontSize: '1rem', fontWeight: 700 }}>Admin Login</h3>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Staff Login</h3>
           </div>
-          <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
-            Enter your admin credentials to access the dashboard.
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '20px' }}>
+            Enter your credentials to access the staff portal.
           </p>
-          <form onSubmit={handleAdminLogin} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+
+          <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+            <button 
+              className={loginRole === 'admin' ? 'btn-primary' : 'btn-secondary'} 
+              style={{ flex: 1, justifyContent: 'center' }}
+              onClick={() => setLoginRole('admin')}
+            >
+              Admin
+            </button>
+            <button 
+              className={loginRole === 'checker' ? 'btn-primary' : 'btn-secondary'} 
+              style={{ flex: 1, justifyContent: 'center' }}
+              onClick={() => setLoginRole('checker')}
+            >
+              Ticket Checker
+            </button>
+          </div>
+
+          <form onSubmit={handleLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <input
+              aria-label="Username"
               className="input-field"
               placeholder="Username"
-              value={adminUsername}
-              onChange={(e) => setAdminUsername(e.target.value)}
+              value={loginUser}
+              onChange={(e) => setLoginUser(e.target.value)}
+              required
             />
             <input
+              aria-label="Password"
               className="input-field"
               type="password"
               placeholder="Password"
-              value={adminPassword}
-              onChange={(e) => setAdminPassword(e.target.value)}
+              value={loginPass}
+              onChange={(e) => setLoginPass(e.target.value)}
+              required
             />
-            {adminError && <div style={{ color: '#f87171', fontSize: '0.8rem' }}>{adminError}</div>}
-            <button className="btn-primary" type="submit">Login</button>
+            {loginError && <div aria-live="polite" style={{ color: '#f87171', fontSize: '0.85rem' }}>{loginError}</div>}
+            <button className="btn-primary" type="submit" style={{ justifyContent: 'center' }}>Login</button>
           </form>
         </div>
-      ) : activeTab === 'admin' ? (
+      )}
+
+      {/* Department Admin Analytics Tab */}
+      {activeTab === 'admin' && adminLoggedIn && (
         <div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px',marginTop:'16px' }}>
-            <button className="btn-secondary " onClick={handleAdminLogout}>Logout</button>
-          </div>
           <AdminDashboard />
         </div>
-      ) : activeTab === 'checker' ? (
-        <TicketCheckerPortal />
-      ) : null}
+      )}
+
+      {/* Ticket Checker Portal */}
+      {activeTab === 'checker' && checkerLoggedIn && (
+        <TicketCheckerPortal username={checkerUsername} />
+      )}
 
       {/* Checkout Modal */}
       {showCheckoutModal && selectedSeats.length > 0 && originStation && destStation && (

@@ -2,13 +2,16 @@ import React from 'react';
 import { Train, ShieldCheck, BarChart3, Ticket, ScanLine, Sun, Moon } from 'lucide-react';
 
 interface HeaderProps {
-  activeTab: 'booking' | 'admin' | 'my-tickets' | 'checker';
-  setActiveTab: (tab: 'booking' | 'admin' | 'my-tickets' | 'checker') => void;
+  activeTab: 'booking' | 'admin' | 'my-tickets' | 'checker' | 'login';
+  setActiveTab: (tab: 'booking' | 'admin' | 'my-tickets' | 'checker' | 'login') => void;
   theme: 'light' | 'dark';
   toggleTheme: () => void;
+  adminLoggedIn: boolean;
+  checkerLoggedIn: boolean;
+  onLogout: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, theme, toggleTheme }) => {
+export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, theme, toggleTheme, adminLoggedIn, checkerLoggedIn, onLogout }) => {
   return (
     <header className="glass-card mb-6" style={{ borderRadius: '0 0 20px 20px', padding: '16px 32px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
@@ -42,41 +45,74 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, theme, 
 
         {/* Navigation Mode Switcher */}
         <div className="nav-buttons" style={{ display: 'flex', gap: '10px', background: 'var(--overlay-bg)', padding: '6px', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
-          <button
-            onClick={() => setActiveTab('booking')}
-            className={activeTab === 'booking' ? 'btn-primary' : 'btn-secondary'}
-            style={{ padding: '8px 16px', fontSize: '0.88rem' }}
-          >
-            <Ticket size={16} />
-            Book Seats
-          </button>
+          {(!adminLoggedIn && !checkerLoggedIn) && (
+            <>
+              <button
+                onClick={() => setActiveTab('booking')}
+                className={activeTab === 'booking' ? 'btn-primary' : 'btn-secondary'}
+                style={{ padding: '8px 16px', fontSize: '0.88rem' }}
+              >
+                <Ticket size={16} />
+                Book Seats
+              </button>
 
-          <button
-            onClick={() => setActiveTab('my-tickets')}
-            className={activeTab === 'my-tickets' ? 'btn-primary' : 'btn-secondary'}
-            style={{ padding: '8px 16px', fontSize: '0.88rem' }}
-          >
-            <ShieldCheck size={16} />
-            PNR Lookup
-          </button>
+              <button
+                onClick={() => setActiveTab('my-tickets')}
+                className={activeTab === 'my-tickets' ? 'btn-primary' : 'btn-secondary'}
+                style={{ padding: '8px 16px', fontSize: '0.88rem' }}
+              >
+                <ShieldCheck size={16} />
+                PNR Lookup
+              </button>
 
-          <button
-            onClick={() => setActiveTab('checker')}
-            className={activeTab === 'checker' ? 'btn-primary' : 'btn-secondary'}
-            style={{ padding: '8px 16px', fontSize: '0.88rem' }}
-          >
-            <ScanLine size={16} />
-            Scan QR
-          </button>
+              <button
+                onClick={() => setActiveTab('login')}
+                className={activeTab === 'login' ? 'btn-primary' : 'btn-secondary'}
+                style={{ padding: '8px 16px', fontSize: '0.88rem' }}
+              >
+                <Lock size={16} />
+                Staff Login
+              </button>
+            </>
+          )}
 
-          <button
-            onClick={() => setActiveTab('admin')}
-            className={activeTab === 'admin' ? 'btn-primary' : 'btn-secondary'}
-            style={{ padding: '8px 16px', fontSize: '0.88rem' }}
-          >
-            <BarChart3 size={16} />
-            Department Admin
-          </button>
+          {adminLoggedIn && (
+            <>
+              <button
+                className="btn-primary"
+                style={{ padding: '8px 16px', fontSize: '0.88rem' }}
+              >
+                <BarChart3 size={16} />
+                Department Admin
+              </button>
+              <button
+                onClick={onLogout}
+                className="btn-secondary"
+                style={{ padding: '8px 16px', fontSize: '0.88rem' }}
+              >
+                Logout
+              </button>
+            </>
+          )}
+
+          {checkerLoggedIn && (
+            <>
+              <button
+                className="btn-primary"
+                style={{ padding: '8px 16px', fontSize: '0.88rem' }}
+              >
+                <ScanLine size={16} />
+                Scan QR
+              </button>
+              <button
+                onClick={onLogout}
+                className="btn-secondary"
+                style={{ padding: '8px 16px', fontSize: '0.88rem' }}
+              >
+                Logout
+              </button>
+            </>
+          )}
           
           {/* Theme Toggle Button */}
           <button
