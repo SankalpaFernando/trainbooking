@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { prisma } from '../services/db';
+import { prisma, redis } from '../services/db';
 import { SegmentService } from '../services/segmentService';
 import { GapFinderService } from '../services/gapFinderService';
 import { BookingService } from '../services/bookingService';
@@ -373,6 +373,12 @@ export class ApiControllers {
           });
         }
         await prisma.seat.createMany({ data: seats });
+        
+        // Invalidate seat availability caches so the new coach appears immediately
+        const keys = await redis.keys('cache:seatGaps:*');
+        if (keys.length > 0) {
+          await redis.del(...keys);
+        }
       }
 
       return res.json({ success: true, data: coach });
@@ -401,6 +407,12 @@ export class ApiControllers {
       }
 
       await prisma.coach.delete({ where: { id } });
+      
+      const keys = await redis.keys('cache:seatGaps:*');
+      if (keys.length > 0) {
+        await redis.del(...keys);
+      }
+
       return res.json({ success: true, data: { deleted: true } });
     } catch (e: any) {
       return res.status(500).json({ success: false, error: e.message });

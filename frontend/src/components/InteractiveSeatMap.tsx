@@ -25,9 +25,7 @@ export const InteractiveSeatMap: React.FC<InteractiveSeatMapProps> = ({
   destinationId,
   onOpenWaitlist,
 }) => {
-  const reservedCoaches = coaches.filter((c) => 
-    c.type === 'RESERVED' && seats.some((s) => s.coachId === c.id)
-  );
+  const reservedCoaches = coaches.filter((c) => c.type === 'RESERVED');
 
   const [activeCoachId, setActiveCoachId] = useState<number>(
     reservedCoaches.length > 0 ? reservedCoaches[0].id : 1
