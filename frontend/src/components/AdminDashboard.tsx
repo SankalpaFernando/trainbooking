@@ -3,11 +3,8 @@ import { DepartmentAnalytics } from '../types';
 import { ApiService } from '../services/api';
 import { BarChart3, DollarSign, Users, Activity, PlusCircle, Train, RefreshCw, Settings } from 'lucide-react';
 
-interface AdminDashboardProps {
-  date: string;
-}
-
-export const AdminDashboard: React.FC<AdminDashboardProps> = ({ date }) => {
+export const AdminDashboard: React.FC = () => {
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [analytics, setAnalytics] = useState<DepartmentAnalytics | null>(null);
   const [coaches, setCoaches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -169,9 +166,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ date }) => {
             </p>
           </div>
 
-          <button className="btn-secondary" onClick={fetchAnalytics} style={{ padding: '6px 12px', fontSize: '0.8rem' }}>
-            <RefreshCw size={14} /> Refresh Metrics
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <input 
+              aria-label="Analytics Date"
+              type="date" 
+              className="input-field" 
+              value={date} 
+              onChange={(e) => setDate(e.target.value)} 
+              style={{ padding: '6px 10px', fontSize: '0.85rem', width: 'auto' }}
+            />
+            <button className="btn-secondary" onClick={fetchAnalytics} style={{ padding: '6px 12px', fontSize: '0.8rem' }}>
+              <RefreshCw size={14} /> Refresh Metrics
+            </button>
+          </div>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>

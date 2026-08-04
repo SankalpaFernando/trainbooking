@@ -315,7 +315,7 @@ export const App: React.FC = () => {
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px',marginTop:'16px' }}>
             <button className="btn-secondary " onClick={handleAdminLogout}>Logout</button>
           </div>
-          <AdminDashboard date={date} />
+          <AdminDashboard />
         </div>
       ) : activeTab === 'checker' ? (
         <TicketCheckerPortal />
