@@ -133,7 +133,7 @@ export const MultiLegCheckoutModal: React.FC<MultiLegCheckoutModalProps> = ({
       left: 0,
       right: 0,
       bottom: 0,
-      background: 'rgba(4, 16, 30, 0.85)',
+      background: 'rgba(0, 0, 0, 0.5)',
       backdropFilter: 'blur(12px)',
       display: 'flex',
       alignItems: 'center',
@@ -183,7 +183,7 @@ export const MultiLegCheckoutModal: React.FC<MultiLegCheckoutModalProps> = ({
         )}
 
         <div style={{
-          background: 'rgba(15, 23, 42, 0.6)',
+          background: 'rgba(0, 0, 0, 0.04)',
           padding: '16px',
           borderRadius: '12px',
           border: '1px solid var(--glass-border)',
@@ -278,7 +278,7 @@ export const MultiLegCheckoutModal: React.FC<MultiLegCheckoutModalProps> = ({
             </div>
 
             <div style={{
-              background: 'rgba(15, 23, 42, 0.6)',
+              background: 'rgba(0, 0, 0, 0.04)',
               borderRadius: '12px',
               padding: '16px',
               border: '1px solid var(--glass-border)',

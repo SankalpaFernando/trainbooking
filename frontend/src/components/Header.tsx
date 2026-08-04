@@ -23,23 +23,23 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
             justifyContent: 'center',
             boxShadow: '0 0 15px rgba(0, 242, 254, 0.4)'
           }}>
-            <Train size={26} color="#04101e" />
+            <Train size={26} color="var(--bg-secondary)" />
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <h1 style={{ fontSize: '1.4rem', fontWeight: 800, background: 'linear-gradient(90deg, #ffffff, #94a3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              <h1 style={{ fontSize: '1.4rem', fontWeight: 800, background: 'none', color: 'var(--accent-cyan)' }}>
                 Sri Lanka Railway
               </h1>
               <span className="badge badge-available">Segment Engine v1.0</span>
             </div>
-            <p style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '2px' }}>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '2px' }}>
               Colombo Fort ↔ Kandy ↔ Nuwara Eliya (Nanu Oya) ↔ Ella ↔ Badulla Scenic Line
             </p>
           </div>
         </div>
 
         {/* Navigation Mode Switcher */}
-        <div className="nav-buttons" style={{ display: 'flex', gap: '10px', background: 'rgba(15, 23, 42, 0.7)', padding: '6px', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
+        <div className="nav-buttons" style={{ display: 'flex', gap: '10px', background: 'rgba(0, 0, 0, 0.05)', padding: '6px', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
           <button
             onClick={() => setActiveTab('booking')}
             className={activeTab === 'booking' ? 'btn-primary' : 'btn-secondary'}

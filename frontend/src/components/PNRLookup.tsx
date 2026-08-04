@@ -63,7 +63,7 @@ export const PNRLookup: React.FC = () => {
       )}
 
       {booking && (
-        <div style={{ background: 'rgba(15, 23, 42, 0.7)', borderRadius: '14px', padding: '20px', border: '1px solid var(--glass-border)' }}>
+        <div style={{ background: 'rgba(0, 0, 0, 0.05)', borderRadius: '14px', padding: '20px', border: '1px solid var(--glass-border)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: '1px solid var(--glass-border)', paddingBottom: '10px' }}>
             <span className="badge badge-available">VALID RESERVATION</span>
             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>PNR: <strong style={{ color: 'var(--accent-cyan)' }}>{booking.pnr}</strong></span>

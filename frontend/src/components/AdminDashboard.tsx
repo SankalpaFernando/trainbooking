@@ -181,7 +181,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ date }) => {
                 {seg.startStationName} → {seg.endStationName}
               </div>
 
-              <div style={{ flex: 1, background: 'rgba(255, 255, 255, 0.05)', borderRadius: '6px', height: '22px', overflow: 'hidden', position: 'relative' }}>
+              <div style={{ flex: 1, background: 'rgba(0, 0, 0, 0.05)', borderRadius: '6px', height: '22px', overflow: 'hidden', position: 'relative' }}>
                 <div style={{
                   width: `${Math.min(seg.occupancyPercentage, 100)}%`,
                   height: '100%',
@@ -221,7 +221,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ date }) => {
         </div>
 
         {showAddCoach && (
-          <form onSubmit={handleAddCoachSubmit} style={{ marginTop: '20px', padding: '20px', background: 'rgba(15, 23, 42, 0.7)', borderRadius: '14px', border: '1px solid var(--glass-border)' }}>
+          <form onSubmit={handleAddCoachSubmit} style={{ marginTop: '20px', padding: '20px', background: 'rgba(0, 0, 0, 0.05)', borderRadius: '14px', border: '1px solid var(--glass-border)' }}>
             <h4 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: '14px', color: 'var(--accent-cyan)' }}>Configure New Coach</h4>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', marginBottom: '16px' }}>
               <div>

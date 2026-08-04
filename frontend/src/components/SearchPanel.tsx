@@ -61,7 +61,7 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
             onChange={(e) => setOriginId(parseInt(e.target.value, 10))}
           >
             {stations.map((st) => (
-              <option key={st.id} value={st.id} style={{ background: '#131c31', color: '#fff' }}>
+              <option key={st.id} value={st.id} style={{ background: 'var(--bg-secondary)', color: 'var(--text-main)' }}>
                 {st.sequenceNumber}. {st.name} ({st.code})
               </option>
             ))}
@@ -106,7 +106,7 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
             onChange={(e) => setDestinationId(parseInt(e.target.value, 10))}
           >
             {stations.map((st) => (
-              <option key={st.id} value={st.id} style={{ background: '#131c31', color: '#fff' }}>
+              <option key={st.id} value={st.id} style={{ background: 'var(--bg-secondary)', color: 'var(--text-main)' }}>
                 {st.sequenceNumber}. {st.name} ({st.code})
               </option>
             ))}

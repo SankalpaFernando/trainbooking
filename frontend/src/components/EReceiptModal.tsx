@@ -24,7 +24,7 @@ export const EReceiptModal: React.FC<EReceiptModalProps> = ({ bookings, onClose 
       left: 0,
       right: 0,
       bottom: 0,
-      background: 'rgba(4, 16, 30, 0.85)',
+      background: 'rgba(0, 0, 0, 0.5)',
       backdropFilter: 'blur(12px)',
       display: 'flex',
       alignItems: 'center',
@@ -32,7 +32,7 @@ export const EReceiptModal: React.FC<EReceiptModalProps> = ({ bookings, onClose 
       zIndex: 110,
       padding: '20px',
     }}>
-      <div className="glass-card" style={{ maxWidth: '580px', width: '100%', padding: '32px', position: 'relative', background: '#0f172a' }}>
+      <div className="glass-card" style={{ maxWidth: '580px', width: '100%', padding: '32px', position: 'relative', background: 'var(--bg-secondary)' }}>
         
         {/* Close Button */}
         <button
@@ -51,7 +51,7 @@ export const EReceiptModal: React.FC<EReceiptModalProps> = ({ bookings, onClose 
         </button>
 
         {/* Printable Ticket Container */}
-        <div id="printable-ticket" style={{ border: '2px dashed var(--glass-border)', padding: '24px', borderRadius: '16px', background: 'rgba(255, 255, 255, 0.02)' }}>
+        <div id="printable-ticket" style={{ border: '2px dashed var(--glass-border)', padding: '24px', borderRadius: '16px', background: 'rgba(0, 0, 0, 0.02)' }}>
           
           {/* Header Badge */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid var(--glass-border)', paddingBottom: '14px' }}>
@@ -106,7 +106,7 @@ export const EReceiptModal: React.FC<EReceiptModalProps> = ({ bookings, onClose 
 
           {/* QR Code & Total Barcode */}
           <div style={{
-            background: 'rgba(0, 0, 0, 0.4)',
+            background: 'rgba(0, 0, 0, 0.04)',
             padding: '16px',
             borderRadius: '12px',
             display: 'flex',
@@ -139,7 +139,7 @@ export const EReceiptModal: React.FC<EReceiptModalProps> = ({ bookings, onClose 
 
         {/* Multi-Ticket Navigation */}
         {bookings.length > 1 && (
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', background: 'rgba(255,255,255,0.05)', padding: '8px 16px', borderRadius: '12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', background: 'rgba(0, 0, 0, 0.05)', padding: '8px 16px', borderRadius: '12px' }}>
             <button
               className="btn-secondary"
               onClick={() => setCurrentIndex((i) => Math.max(0, i - 1))}
