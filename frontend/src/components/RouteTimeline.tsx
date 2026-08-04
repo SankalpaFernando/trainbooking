@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Station } from '../types';
 import { ScenicAttraction } from '../utils/scenicRoutes';
 import { Camera } from 'lucide-react';
@@ -38,7 +39,7 @@ export const RouteTimeline: React.FC<RouteTimelineProps> = ({ stations, originId
     return boundarySeqs.has(station.sequenceNumber);
   });
 
-  const [hoveredSegmentId, setHoveredSegmentId] = useState<number | null>(null);
+  const [hoverInfo, setHoverInfo] = useState<{ attr: ScenicAttraction; rect: DOMRect } | null>(null);
 
   return (
     <div style={{ marginTop: '20px', marginBottom: '24px', padding: '16px 0', overflowX: 'auto' }}>
@@ -119,8 +120,8 @@ export const RouteTimeline: React.FC<RouteTimelineProps> = ({ stations, originId
                 }}>
                   {nextAttraction && (
                     <div 
-                      onMouseEnter={() => setHoveredSegmentId(idx)}
-                      onMouseLeave={() => setHoveredSegmentId(null)}
+                      onMouseEnter={(e) => setHoverInfo({ attr: nextAttraction!, rect: e.currentTarget.getBoundingClientRect() })}
+                      onMouseLeave={() => setHoverInfo(null)}
                       style={{
                         position: 'relative',
                         width: '28px',
@@ -134,47 +135,10 @@ export const RouteTimeline: React.FC<RouteTimelineProps> = ({ stations, originId
                         boxShadow: '0 0 10px rgba(244, 63, 94, 0.4)',
                         border: '2px solid var(--bg-secondary)',
                         transition: 'transform 0.2s ease',
-                        transform: hoveredSegmentId === idx ? 'scale(1.2)' : 'scale(1)'
+                        transform: hoverInfo?.attr.name === nextAttraction.name ? 'scale(1.2)' : 'scale(1)'
                       }}
                     >
                       <Camera size={14} color="#fff" />
-                      
-                      {/* Hover Photo Card */}
-                      {hoveredSegmentId === idx && (
-                        <div style={{
-                          position: 'absolute',
-                          bottom: '40px',
-                          left: '50%',
-                          transform: 'translateX(-50%)',
-                          background: 'var(--glass-bg)',
-                          backdropFilter: 'blur(16px)',
-                          border: '1px solid var(--glass-border)',
-                          borderRadius: '12px',
-                          padding: '12px',
-                          width: '220px',
-                          boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
-                          zIndex: 50,
-                          pointerEvents: 'none'
-                        }}>
-                          <img 
-                            src={nextAttraction.imageUrl} 
-                            alt={nextAttraction.name}
-                            style={{
-                              width: '100%',
-                              height: '120px',
-                              objectFit: 'cover',
-                              borderRadius: '8px',
-                              marginBottom: '8px'
-                            }}
-                          />
-                          <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '4px' }}>
-                            {nextAttraction.name}
-                          </div>
-                          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
-                            {nextAttraction.description}
-                          </div>
-                        </div>
-                      )}
                     </div>
                   )}
                 </div>
@@ -184,6 +148,44 @@ export const RouteTimeline: React.FC<RouteTimelineProps> = ({ stations, originId
         })}
       </div>
       <div style={{ height: '40px' }} /> {/* Spacer for labels */}
+      
+      {/* Portal for Hover Card to escape overflow container */}
+      {hoverInfo && createPortal(
+        <div style={{
+          position: 'fixed',
+          top: hoverInfo.rect.top - 210, // positioned above the icon
+          left: hoverInfo.rect.left + hoverInfo.rect.width / 2,
+          transform: 'translateX(-50%)',
+          background: 'var(--glass-bg)',
+          backdropFilter: 'blur(16px)',
+          border: '1px solid var(--glass-border)',
+          borderRadius: '12px',
+          padding: '12px',
+          width: '220px',
+          boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
+          zIndex: 9999,
+          pointerEvents: 'none'
+        }}>
+          <img 
+            src={hoverInfo.attr.imageUrl} 
+            alt={hoverInfo.attr.name}
+            style={{
+              width: '100%',
+              height: '120px',
+              objectFit: 'cover',
+              borderRadius: '8px',
+              marginBottom: '8px'
+            }}
+          />
+          <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '4px' }}>
+            {hoverInfo.attr.name}
+          </div>
+          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+            {hoverInfo.attr.description}
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };
