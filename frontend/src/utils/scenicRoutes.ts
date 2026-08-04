@@ -14,7 +14,7 @@ export const SCENIC_ATTRACTIONS: ScenicAttraction[] = [
     idealSideUp: 'LEFT',
     startSeq: 6, // Rambukkana
     endSeq: 8,   // Kandy
-    imageUrl: 'https://images.unsplash.com/photo-1579730561578-1a52862d3a39?auto=format&fit=crop&q=80&w=600', // green hills train
+    imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR779ExNm9sYJsSOakNvSuk1ND2hKw7uYueZSv3THbvTA&s=10', // green hills train
   },
   {
     name: 'St. Clair\'s & Devon Falls',
@@ -22,7 +22,7 @@ export const SCENIC_ATTRACTIONS: ScenicAttraction[] = [
     idealSideUp: 'RIGHT',
     startSeq: 10, // Hatton
     endSeq: 11,   // Nanu Oya
-    imageUrl: 'https://images.unsplash.com/photo-1620606990499-d41c4840d8aa?auto=format&fit=crop&q=80&w=600', // waterfall tea estate
+    imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTcAv8sdpFUjYycIz4kUjpT6IR8mYYrcQPJ9ke6EU8NJg&s', // waterfall tea estate
   },
   {
     name: 'Horton Plains & Pine Forests',
@@ -30,7 +30,7 @@ export const SCENIC_ATTRACTIONS: ScenicAttraction[] = [
     idealSideUp: 'BOTH',
     startSeq: 11, // Nanu Oya
     endSeq: 14,   // Haputale
-    imageUrl: 'https://images.unsplash.com/photo-1549474742-0056972740fc?auto=format&fit=crop&q=80&w=600', // foggy forest
+    imageUrl: 'https://media-cdn.tripadvisor.com/media/attractions-splice-spp-674x446/09/8f/cc/db.jpg', // foggy forest
   },
   {
     name: 'Haputale Gap & Thangamale',
@@ -38,7 +38,7 @@ export const SCENIC_ATTRACTIONS: ScenicAttraction[] = [
     idealSideUp: 'RIGHT',
     startSeq: 14, // Haputale
     endSeq: 17,   // Ella
-    imageUrl: 'https://images.unsplash.com/photo-1548489709-612fb8ce9019?auto=format&fit=crop&q=80&w=600', // wide mountain drop
+    imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR3kfCYEsOBRZZQwY_Y1NcjjcnY7gd1ZKwr3NoqJLS9lQ&s=10', // wide mountain drop
   },
   {
     name: 'Demodara Nine Arch Bridge',
@@ -46,7 +46,7 @@ export const SCENIC_ATTRACTIONS: ScenicAttraction[] = [
     idealSideUp: 'LEFT',
     startSeq: 17, // Ella
     endSeq: 18,   // Badulla
-    imageUrl: 'https://images.unsplash.com/photo-1563852079040-e1cbfa2a9eb5?auto=format&fit=crop&q=80&w=600', // nine arch bridge
+    imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT415ORdspyweuO69VWKZGY6wybXf87m3Bgq0z0m1RC3w&s=10', // nine arch bridge
   }
 ];
 

@@ -5,10 +5,8 @@ services:
   db:
     image: postgres:16-alpine
     container_name: train_booking_db
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: railway_booking
+    env_file:
+      - .env
     ports:
       - "5432:5432"
     volumes:
@@ -38,17 +36,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: train_booking_backend
-    environment:
-      NODE_ENV: development
-      DATABASE_URL: "postgresql://postgres:postgres@db:5432/railway_booking?schema=public"
-      REDIS_URL: "redis://redis:6379"
-      PORT: 5001
-      BASE_FARE: 100
-      PER_STATION_RATE: 50
-      HOLD_TTL_SECONDS: 300
-      OTEL_SERVICE_NAME: railway-booking-backend
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4318/v1/traces
-      LOKI_URL: http://loki:3100
+    env_file:
+      - .env
     ports:
       - "5001:5001"
     volumes:

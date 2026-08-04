@@ -147,6 +147,8 @@ export const RouteTimeline: React.FC<RouteTimelineProps> = ({ stations, originId
           );
         })}
       </div>
+
+      
       <div style={{ height: '40px' }} /> {/* Spacer for labels */}
       
       {/* Portal for Hover Card to escape overflow container */}
@@ -186,6 +188,12 @@ export const RouteTimeline: React.FC<RouteTimelineProps> = ({ stations, originId
         </div>,
         document.body
       )}
+
+      <div style={{textAlign:'right'}}>
+      <small style={{fontSize:'0.52rem',textAlign:'center'}}><i>** These station markers only show where the scenic views are located so passengers know when to look outside. <br/> The train still stops at all other regular stations along the way.</i></small>
+
+      </div>
+
     </div>
   );
 };
