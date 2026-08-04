@@ -36,6 +36,23 @@ const COACHES = [
 ];
 
 async function main() {
+  console.log('Applying database constraints...');
+  await prisma.$executeRawUnsafe(`
+    DO $$
+    BEGIN
+        IF NOT EXISTS (
+            SELECT 1 FROM pg_constraint WHERE conname = 'no_double_booking'
+        ) THEN
+            ALTER TABLE "Booking" ADD CONSTRAINT no_double_booking
+            EXCLUDE USING gist (
+                "seatId" WITH =,
+                "date" WITH =,
+                int4range("startStationSeq", "endStationSeq") WITH &&
+            ) WHERE ("status" IN ('PENDING', 'CONFIRMED'));
+        END IF;
+    END $$;
+  `);
+  
   console.log('Seeding Sri Lanka Railway Colombo Fort - Badulla line...');
 
   // 1. Seed Stations
