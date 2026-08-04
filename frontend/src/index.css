@@ -229,7 +229,7 @@ h1, h2, h3, h4, h5, h6 {
 .dark .seat-occupied {
   background: #ff2c562a;
   color: #ff9fb0;
-  border-color: #ff2c569b;
+  border-color: rgba(244, 63, 94, 0.3);
   opacity: 0.9;
 }
 

@@ -403,7 +403,33 @@ export const InteractiveSeatMap: React.FC<InteractiveSeatMapProps> = ({
               </span>
             </button>
 
-            {/* Keep your existing tooltip here */}
+            {/* Custom Tooltip */}
+            {hoveredSeatId === seat.seatId && windowSeat && activeCoach && (
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: '100%',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  marginBottom: '8px',
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--glass-border)',
+                  padding: '8px 12px',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                  zIndex: 100,
+                  width: 'max-content',
+                  pointerEvents: 'none',
+                  fontSize: '0.75rem',
+                  color: 'var(--text-main)',
+                  textAlign: 'center',
+                }}
+              >
+                <div style={{ fontWeight: 600, marginBottom: '2px', color: 'var(--accent-cyan)' }}>Window Seat Breakdown</div>
+                <div>Class Fare: <span>LKR {getCoachFare(activeCoach.classType, activeCoach.id)?.toFixed(2)}</span></div>
+                <div>Surcharge: <span style={{ color: 'var(--accent-teal)' }}>+LKR {seat.windowSurcharge ?? 100}</span></div>
+              </div>
+            )}
           </div>
         </React.Fragment>
       );
