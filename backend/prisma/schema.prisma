@@ -18,6 +18,11 @@ enum ClassType {
   THIRD_CLASS
 }
 
+enum Role {
+  ADMIN
+  TICKET_CHECKER
+}
+
 enum BookingStatus {
   PENDING
   CONFIRMED
@@ -112,10 +117,11 @@ model Seat {
   @@unique([coachId, seatNumber])
 }
 
-model TicketChecker {
+model User {
   id        Int      @id @default(autoincrement())
   username  String   @unique
   password  String
+  role      Role     @default(TICKET_CHECKER)
   createdAt DateTime @default(now())
 }
 

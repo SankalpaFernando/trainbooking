@@ -70,34 +70,59 @@ const loginLimiter = strictRateLimiter({
   message: 'Too many login attempts. Please try again in 5 minutes.',
 });
 
+import bcrypt from 'bcryptjs';
+import { prisma } from '../services/db';
+
 // ---------- Admin Auth ----------
 
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME || '';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
-
-const requireAdminAuth = (req: any, res: any, next: any) => {
+const requireAdminAuth = async (req: any, res: any, next: any) => {
   const authHeader = req.headers.authorization || '';
-  const expected = 'Basic ' + Buffer.from(`${ADMIN_USERNAME}:${ADMIN_PASSWORD}`).toString('base64');
-
-  if (authHeader === expected) {
-    return next();
+  if (!authHeader.startsWith('Basic ')) {
+    res.setHeader('WWW-Authenticate', 'Basic realm="Admin"');
+    return res.status(401).json({ success: false, error: 'Unauthorized' });
   }
 
-  res.setHeader('WWW-Authenticate', 'Basic realm="Admin"');
-  return res.status(401).json({ success: false, error: 'Unauthorized' });
+  try {
+    const base64Credentials = authHeader.split(' ')[1];
+    const credentials = Buffer.from(base64Credentials, 'base64').toString('utf8');
+    const [username, password] = credentials.split(':');
+
+    const user = await prisma.user.findUnique({ where: { username } });
+    if (!user || user.role !== 'ADMIN') {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    const isValid = await bcrypt.compare(password, user.password);
+    if (!isValid) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    // Attach user to req if needed
+    req.user = user;
+    return next();
+  } catch (err) {
+    return res.status(401).json({ success: false, error: 'Unauthorized' });
+  }
 };
 
 // ---------- Routes ----------
 
-router.post('/admin/login', loginLimiter, (req: any, res: any) => {
+router.post('/admin/login', loginLimiter, async (req: any, res: any) => {
   const { username, password } = req.body || {};
 
-  if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-    const token = 'Basic ' + Buffer.from(`${ADMIN_USERNAME}:${ADMIN_PASSWORD}`).toString('base64');
-    return res.json({ success: true, data: { token } });
+  try {
+    const user = await prisma.user.findUnique({ where: { username } });
+    if (user && user.role === 'ADMIN') {
+      const isValid = await bcrypt.compare(password, user.password);
+      if (isValid) {
+        const token = 'Basic ' + Buffer.from(`${username}:${password}`).toString('base64');
+        return res.json({ success: true, data: { token } });
+      }
+    }
+    return res.status(401).json({ success: false, error: 'Invalid admin credentials' });
+  } catch (e: any) {
+    return res.status(500).json({ success: false, error: e.message });
   }
-
-  return res.status(401).json({ success: false, error: 'Invalid admin credentials' });
 });
 
 // Infrastructure & Master Data

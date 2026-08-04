@@ -1,4 +1,5 @@
-import { PrismaClient, CoachType, ClassType, BookingStatus } from '@prisma/client';
+import { PrismaClient, CoachType, ClassType, BookingStatus, Role } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -149,13 +150,30 @@ async function main() {
 
   console.log('Successfully seeded initial segment bookings demonstrating seat reuse.');
 
-  // 4. Seed initial Ticket Checker
-  await prisma.ticketChecker.upsert({
+  // 4. Seed initial Ticket Checker and Admin
+  const adminUsername = process.env.ADMIN_USERNAME || 'admin';
+  const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+  const hashedAdminPassword = await bcrypt.hash(adminPassword, 10);
+
+  await prisma.user.upsert({
+    where: { username: adminUsername },
+    update: {},
+    create: {
+      username: adminUsername,
+      password: hashedAdminPassword,
+      role: Role.ADMIN,
+    },
+  });
+  console.log(`Successfully seeded default Admin account (${adminUsername}).`);
+
+  const hashedCheckerPassword = await bcrypt.hash('password123', 10);
+  await prisma.user.upsert({
     where: { username: 'checker_1' },
     update: {},
     create: {
       username: 'checker_1',
-      password: 'password123', // In a real app this should be hashed
+      password: hashedCheckerPassword,
+      role: Role.TICKET_CHECKER,
     },
   });
   console.log('Successfully seeded default Ticket Checker account (checker_1 / password123).');

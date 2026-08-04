@@ -7,7 +7,8 @@ import { FareService } from '../services/fareService';
 import { RecaptchaService } from '../services/recaptchaService';
 import { ValidationService } from '../services/validationService';
 import { AnalyticsService } from '../services/analyticsService';
-import { BookingStatus, CoachType, ClassType } from '@prisma/client';
+import { BookingStatus, CoachType, ClassType, Role } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
 const checkBookingDateAllowed = async (dateStr: string): Promise<string | null> => {
   const setting = await prisma.systemSetting.findUnique({
@@ -479,15 +480,20 @@ export class ApiControllers {
   public static async checkerLogin(req: Request, res: Response) {
     try {
       const { username, password } = req.body;
-      const checker = await prisma.ticketChecker.findUnique({ where: { username } });
+      const user = await prisma.user.findUnique({ where: { username } });
       
-      if (!checker || checker.password !== password) {
+      if (!user) {
+        return res.status(401).json({ success: false, error: 'Invalid credentials' });
+      }
+
+      const isValid = await bcrypt.compare(password, user.password);
+      if (!isValid) {
         return res.status(401).json({ success: false, error: 'Invalid credentials' });
       }
 
       // Simple token for demonstration (in production, use JWT)
       const token = 'Checker ' + Buffer.from(`${username}:${password}`).toString('base64');
-      return res.json({ success: true, data: { token, username } });
+      return res.json({ success: true, data: { token, username, role: user.role } });
     } catch (e: any) {
       return res.status(500).json({ success: false, error: e.message });
     }
@@ -528,15 +534,19 @@ export class ApiControllers {
         return res.status(400).json({ success: false, error: 'Username and password required' });
       }
 
-      const existing = await prisma.ticketChecker.findUnique({ where: { username } });
+      const existing = await prisma.user.findUnique({ where: { username } });
       if (existing) {
         return res.status(400).json({ success: false, error: 'Username already exists' });
       }
 
-      const checker = await prisma.ticketChecker.create({
-        data: { username, password },
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const checker = await prisma.user.create({
+        data: { username, password: hashedPassword, role: Role.TICKET_CHECKER },
       });
-      return res.json({ success: true, data: checker });
+
+      // Remove password from response
+      const { password: _, ...checkerWithoutPassword } = checker;
+      return res.json({ success: true, data: checkerWithoutPassword });
     } catch (e: any) {
       return res.status(500).json({ success: false, error: e.message });
     }
@@ -547,7 +557,8 @@ export class ApiControllers {
    */
   public static async getCheckers(req: Request, res: Response) {
     try {
-      const checkers = await prisma.ticketChecker.findMany({
+      const checkers = await prisma.user.findMany({
+        where: { role: Role.TICKET_CHECKER },
         select: { id: true, username: true, createdAt: true },
         orderBy: { id: 'asc' },
       });
@@ -568,11 +579,14 @@ export class ApiControllers {
         return res.status(400).json({ success: false, error: 'Password required' });
       }
 
-      const checker = await prisma.ticketChecker.update({
-        where: { id },
-        data: { password },
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const checker = await prisma.user.update({
+        where: { id, role: Role.TICKET_CHECKER },
+        data: { password: hashedPassword },
       });
-      return res.json({ success: true, data: checker });
+
+      const { password: _, ...checkerWithoutPassword } = checker;
+      return res.json({ success: true, data: checkerWithoutPassword });
     } catch (e: any) {
       return res.status(500).json({ success: false, error: e.message });
     }
@@ -584,8 +598,8 @@ export class ApiControllers {
   public static async deleteChecker(req: Request, res: Response) {
     try {
       const id = parseInt(req.params.id, 10);
-      await prisma.ticketChecker.delete({
-        where: { id },
+      await prisma.user.delete({
+        where: { id, role: Role.TICKET_CHECKER },
       });
       return res.json({ success: true, data: { deleted: true } });
     } catch (e: any) {

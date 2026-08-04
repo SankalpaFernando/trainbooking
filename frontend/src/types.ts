@@ -132,8 +132,9 @@ export interface DepartmentAnalytics {
   coachMetrics: CoachRevenueMetric[];
 }
 
-export interface TicketChecker {
+export interface User {
   id: number;
   username: string;
+  role: 'ADMIN' | 'TICKET_CHECKER';
   createdAt: string;
 }
