@@ -732,12 +732,13 @@ Plus all default Node.js metrics (event loop lag, heap usage, GC pauses, active 
 │ status (enum)│                          └──────────────┘
 └──────────────┘
                      ┌──────────────┐     ┌──────────────┐
-                     │TicketChecker │     │SystemSetting │
+                     │     User     │     │SystemSetting │
                      ├──────────────┤     ├──────────────┤
                      │ id           │     │ id           │
                      │ username     │     │ key          │
                      │ password     │     │ value        │
-                     └──────────────┘     └──────────────┘
+                     │ role (enum)  │     └──────────────┘
+                     └──────────────┘
 ```
 
 **Key Design Decisions:**
@@ -855,10 +856,10 @@ Full API documentation available in `swagger.yaml` (OpenAPI 3.0 specification).
 | **Rate Limiting** | 4-tier Redis-backed counters per IP | ✅ Active |
 | **Input Validation** | Sri Lankan NIC regex + phone format validation (server-side) | ✅ Active |
 | **CORS** | Configured via `cors` middleware | ✅ Active |
-| **Admin Auth** | HTTP Basic Authentication via environment variables | ✅ Active (demo-grade) |
+| **Admin Auth** | Database-backed login with session tokens | ✅ Active |
 | **Booking Date Window** | Configurable advance booking limit (default 30 days) | ✅ Active |
 | **SQL Injection** | Prevented by Prisma ORM's parameterized queries | ✅ Active |
-| **Password Hashing** | Not implemented (plain text for demo) | ⚠️ Demo only |
+| **Password Hashing** | bcryptjs hashing for all user accounts | ✅ Active |
 | **JWT/OAuth** | Not implemented | ⚠️ Demo only |
 | **HTTPS** | Not configured (relies on reverse proxy in production) | ⚠️ Local dev only |
 
@@ -939,7 +940,7 @@ The system seeds automatically with:
 - **8 coaches**: 2× First Class (24 seats each), 1× Second Class Reserved (24 seats), 5× Unreserved
 - **72 reserved seats** across 3 reserved coaches
 - **3 demo bookings** demonstrating seat segment reuse
-- **1 ticket checker** account (`checker_1` / `password123`)
+- **1 ticket checker** and **1 admin** account with securely hashed passwords.
 
 ### Environment Variables
 
