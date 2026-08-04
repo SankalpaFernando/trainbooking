@@ -52,7 +52,6 @@ export interface FareEstimate {
   baseFare: number;
   stationsTraversed: number;
   ratePerStation: number;
-  classMultiplier: number;
   totalFare: number;
 }
 

@@ -39,9 +39,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     const windowSurchargeRate = seat.windowSurcharge ?? 100;
     
     const stationsTraversed = Math.abs(destinationStation.sequenceNumber - originStation.sequenceNumber);
-    const multiplier = seat.classType === 'FIRST_CLASS' ? 1.5 : seat.classType === 'SECOND_CLASS' ? 1.2 : 1;
     const windowSurcharge = seat.isWindowSeat ? windowSurchargeRate : 0;
-    return Math.round((baseFare + stationsTraversed * ratePerStation * multiplier + windowSurcharge) * 100) / 100;
+    return Math.round((baseFare + stationsTraversed * ratePerStation + windowSurcharge) * 100) / 100;
   };
 
   useEffect(() => {

@@ -57,17 +57,7 @@ export const InteractiveSeatMap: React.FC<InteractiveSeatMapProps> = ({
     ? getScenicRecommendations(originStation.sequenceNumber, destStation.sequenceNumber)
     : null;
 
-  const getClassMultiplier = (classType: Coach['classType']) => {
-    switch (classType) {
-      case 'FIRST_CLASS':
-        return 1.5;
-      case 'SECOND_CLASS':
-        return 1.2;
-      case 'THIRD_CLASS':
-      default:
-        return 1.0;
-    }
-  };
+
 
   const isWindowSeat = (seatNumber: string): boolean => {
     const number = parseInt(seatNumber.split('-').pop() || '0', 10);
@@ -82,8 +72,7 @@ export const InteractiveSeatMap: React.FC<InteractiveSeatMapProps> = ({
     const baseFare = firstSeat?.baseFare ?? fareEstimate.baseFare;
     const ratePerStation = firstSeat?.ratePerStation ?? fareEstimate.ratePerStation;
     const stationsTraversed = fareEstimate.stationsTraversed;
-    const multiplier = getClassMultiplier(classType);
-    return Math.round((baseFare + stationsTraversed * ratePerStation * multiplier) * 100) / 100;
+    return Math.round((baseFare + stationsTraversed * ratePerStation) * 100) / 100;
   };
 
   const getStationName = (seq: number) => {
