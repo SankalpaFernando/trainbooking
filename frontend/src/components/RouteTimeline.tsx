@@ -21,11 +21,24 @@ export const RouteTimeline: React.FC<RouteTimelineProps> = ({ stations, originId
   const upperSeq = Math.max(originStation.sequenceNumber, destStation.sequenceNumber);
 
   // Filter and sort the stations for the current leg
-  const legStations = stations
+  const allLegStations = stations
     .filter(s => s.sequenceNumber >= lowerSeq && s.sequenceNumber <= upperSeq)
     .sort((a, b) => isGoingUp ? a.sequenceNumber - b.sequenceNumber : b.sequenceNumber - a.sequenceNumber);
 
-  const [hoveredAttraction, setHoveredAttraction] = useState<ScenicAttraction | null>(null);
+  // Keep only origin, destination, and stations that are boundaries of visible attractions
+  const visibleAttractions = attractions.filter(a => a.startSeq < upperSeq && a.endSeq > lowerSeq);
+  const boundarySeqs = new Set<number>();
+  visibleAttractions.forEach(a => {
+    boundarySeqs.add(a.startSeq);
+    boundarySeqs.add(a.endSeq);
+  });
+
+  const legStations = allLegStations.filter((station, idx) => {
+    if (idx === 0 || idx === allLegStations.length - 1) return true;
+    return boundarySeqs.has(station.sequenceNumber);
+  });
+
+  const [hoveredSegmentId, setHoveredSegmentId] = useState<number | null>(null);
 
   return (
     <div style={{ marginTop: '20px', marginBottom: '24px', padding: '16px 0', overflowX: 'auto' }}>
@@ -106,8 +119,8 @@ export const RouteTimeline: React.FC<RouteTimelineProps> = ({ stations, originId
                 }}>
                   {nextAttraction && (
                     <div 
-                      onMouseEnter={() => setHoveredAttraction(nextAttraction!)}
-                      onMouseLeave={() => setHoveredAttraction(null)}
+                      onMouseEnter={() => setHoveredSegmentId(idx)}
+                      onMouseLeave={() => setHoveredSegmentId(null)}
                       style={{
                         position: 'relative',
                         width: '28px',
@@ -121,13 +134,13 @@ export const RouteTimeline: React.FC<RouteTimelineProps> = ({ stations, originId
                         boxShadow: '0 0 10px rgba(244, 63, 94, 0.4)',
                         border: '2px solid var(--bg-secondary)',
                         transition: 'transform 0.2s ease',
-                        transform: hoveredAttraction?.name === nextAttraction.name ? 'scale(1.2)' : 'scale(1)'
+                        transform: hoveredSegmentId === idx ? 'scale(1.2)' : 'scale(1)'
                       }}
                     >
                       <Camera size={14} color="#fff" />
                       
                       {/* Hover Photo Card */}
-                      {hoveredAttraction?.name === nextAttraction.name && (
+                      {hoveredSegmentId === idx && (
                         <div style={{
                           position: 'absolute',
                           bottom: '40px',
