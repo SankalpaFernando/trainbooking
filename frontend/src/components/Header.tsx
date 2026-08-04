@@ -1,6 +1,6 @@
 import React from 'react';
 import { Train, ShieldCheck, BarChart3, Ticket, ScanLine, Sun, Moon, Lock } from 'lucide-react';
-
+import logo from '../assets/logo.png'
 interface HeaderProps {
   activeTab: 'booking' | 'admin' | 'my-tickets' | 'checker' | 'login';
   setActiveTab: (tab: 'booking' | 'admin' | 'my-tickets' | 'checker' | 'login') => void;
@@ -28,12 +28,12 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, theme, 
             justifyContent: 'center',
             boxShadow: '0 0 15px rgba(0, 242, 254, 0.4)'
           }}>
-            <Train size={26} color="var(--bg-secondary)" />
+            <image src={logo} />
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <h1 style={{ fontSize: '1.4rem', fontWeight: 800, background: 'none', color: 'var(--accent-cyan)' }}>
-                Sri Lanka Railway
+                Sri Lanka Railways
               </h1>
               <span className="badge badge-available">Segment Engine v1.0</span>
             </div>
