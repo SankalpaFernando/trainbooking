@@ -36,147 +36,164 @@ const COACHES = [
 ];
 
 async function main() {
-  const stationCount = await prisma.station.count();
-  if (stationCount > 0) {
-    console.log('Database already contains data. Skipping seed.');
-    return;
-  }
-
   console.log('Seeding Sri Lanka Railway Colombo Fort - Badulla line...');
 
   // 1. Seed Stations
-  for (const st of STATIONS) {
-    await prisma.station.upsert({
-      where: { code: st.code },
-      update: { name: st.name, sequenceNumber: st.sequenceNumber, distanceKm: st.distanceKm },
-      create: st,
-    });
+  const stationCount = await prisma.station.count();
+  let createdStations = await prisma.station.findMany({ orderBy: { sequenceNumber: 'asc' } });
+  
+  if (stationCount === 0) {
+    for (const st of STATIONS) {
+      await prisma.station.upsert({
+        where: { code: st.code },
+        update: { name: st.name, sequenceNumber: st.sequenceNumber, distanceKm: st.distanceKm },
+        create: st,
+      });
+    }
+    createdStations = await prisma.station.findMany({ orderBy: { sequenceNumber: 'asc' } });
+    console.log(`Seeded ${createdStations.length} stations.`);
+  } else {
+    console.log('Stations already seeded.');
   }
-  const createdStations = await prisma.station.findMany({ orderBy: { sequenceNumber: 'asc' } });
-  console.log(`Seeded ${createdStations.length} stations.`);
 
   // 2. Seed Coaches & Seats
-  for (const ch of COACHES) {
-    const coach = await prisma.coach.create({
-      data: {
-        name: ch.name,
-        type: ch.type,
-        classType: ch.classType,
-        totalSeats: ch.totalSeats,
-        baseFare: ch.baseFare,
-        ratePerStation: ch.ratePerStation,
-        windowSurcharge: ch.windowSurcharge,
-      },
-    });
+  const coachCount = await prisma.coach.count();
+  if (coachCount === 0) {
+    for (const ch of COACHES) {
+      const coach = await prisma.coach.create({
+        data: {
+          name: ch.name,
+          type: ch.type,
+          classType: ch.classType,
+          totalSeats: ch.totalSeats,
+          baseFare: ch.baseFare,
+          ratePerStation: ch.ratePerStation,
+          windowSurcharge: ch.windowSurcharge,
+        },
+      });
 
-    if (ch.type === CoachType.RESERVED) {
-      for (let i = 1; i <= ch.totalSeats; i++) {
-        const numStr = i < 10 ? `0${i}` : `${i}`;
-        await prisma.seat.create({
-          data: {
-            seatNumber: `${ch.prefix}-${numStr}`,
-            coachId: coach.id,
-          },
-        });
+      if (ch.type === CoachType.RESERVED) {
+        for (let i = 1; i <= ch.totalSeats; i++) {
+          const numStr = i < 10 ? `0${i}` : `${i}`;
+          await prisma.seat.create({
+            data: {
+              seatNumber: `${ch.prefix}-${numStr}`,
+              coachId: coach.id,
+            },
+          });
+        }
       }
     }
+    const seatCount = await prisma.seat.count();
+    console.log(`Seeded coaches and ${seatCount} reserved seats.`);
+  } else {
+    console.log('Coaches and seats already seeded.');
   }
-  const seatCount = await prisma.seat.count();
-  console.log(`Seeded coaches and ${seatCount} reserved seats.`);
 
   // 3. Seed Demo Segment Bookings to showcase seat reuse
-  const today = new Date().toISOString().split('T')[0];
+  const bookingCount = await prisma.booking.count();
+  if (bookingCount === 0) {
+    const today = new Date().toISOString().split('T')[0];
 
-  const seatA1 = await prisma.seat.findFirst({ where: { seatNumber: 'A-01' } });
-  const seatA2 = await prisma.seat.findFirst({ where: { seatNumber: 'A-02' } });
+    const seatA1 = await prisma.seat.findFirst({ where: { seatNumber: 'A-01' } });
+    const seatA2 = await prisma.seat.findFirst({ where: { seatNumber: 'A-02' } });
 
-  if (seatA1) {
-    // Passenger 1: Colombo Fort (seq 1) -> Kandy (seq 8) on Seat A-01
-    await prisma.booking.create({
-      data: {
-        pnr: 'SLR-DEMO-01',
-        seatId: seatA1.id,
-        date: today,
-        startStationSeq: 1,
-        endStationSeq: 8,
-        startStationId: createdStations.find(s => s.sequenceNumber === 1)?.id,
-        endStationId: createdStations.find(s => s.sequenceNumber === 8)?.id,
-        status: BookingStatus.CONFIRMED,
-        guestName: 'Kasun Perera',
-        guestNic: '921840291V',
-        guestMobile: '+94771234567',
-        totalFare: 450.00,
-      },
-    });
+    if (seatA1) {
+      // Passenger 1: Colombo Fort (seq 1) -> Kandy (seq 8) on Seat A-01
+      await prisma.booking.create({
+        data: {
+          pnr: 'SLR-DEMO-01',
+          seatId: seatA1.id,
+          date: today,
+          startStationSeq: 1,
+          endStationSeq: 8,
+          startStationId: createdStations.find(s => s.sequenceNumber === 1)?.id,
+          endStationId: createdStations.find(s => s.sequenceNumber === 8)?.id,
+          status: BookingStatus.CONFIRMED,
+          guestName: 'Kasun Perera',
+          guestNic: '921840291V',
+          guestMobile: '+94771234567',
+          totalFare: 450.00,
+        },
+      });
 
-    // Passenger 2: REUSES Seat A-01 from Kandy (seq 8) -> Badulla (seq 18)!
-    await prisma.booking.create({
-      data: {
-        pnr: 'SLR-DEMO-02',
-        seatId: seatA1.id,
-        date: today,
-        startStationSeq: 8,
-        endStationSeq: 18,
-        startStationId: createdStations.find(s => s.sequenceNumber === 8)?.id,
-        endStationId: createdStations.find(s => s.sequenceNumber === 18)?.id,
-        status: BookingStatus.CONFIRMED,
-        guestName: 'Nimali Fernando',
-        guestNic: '958291048V',
-        guestMobile: '+94719876543',
-        totalFare: 600.00,
-      },
-    });
+      // Passenger 2: REUSES Seat A-01 from Kandy (seq 8) -> Badulla (seq 18)!
+      await prisma.booking.create({
+        data: {
+          pnr: 'SLR-DEMO-02',
+          seatId: seatA1.id,
+          date: today,
+          startStationSeq: 8,
+          endStationSeq: 18,
+          startStationId: createdStations.find(s => s.sequenceNumber === 8)?.id,
+          endStationId: createdStations.find(s => s.sequenceNumber === 18)?.id,
+          status: BookingStatus.CONFIRMED,
+          guestName: 'Nimali Fernando',
+          guestNic: '958291048V',
+          guestMobile: '+94719876543',
+          totalFare: 600.00,
+        },
+      });
+    }
+
+    if (seatA2) {
+      // Passenger 3: Colombo Fort (seq 1) -> Nanu Oya (seq 11) on Seat A-02
+      await prisma.booking.create({
+        data: {
+          pnr: 'SLR-DEMO-03',
+          seatId: seatA2.id,
+          date: today,
+          startStationSeq: 1,
+          endStationSeq: 11,
+          startStationId: createdStations.find(s => s.sequenceNumber === 1)?.id,
+          endStationId: createdStations.find(s => s.sequenceNumber === 11)?.id,
+          status: BookingStatus.CONFIRMED,
+          guestName: 'Sunil Shantha',
+          guestNic: '881029482V',
+          guestMobile: '+94701122334',
+          totalFare: 600.00,
+        },
+      });
+    }
+
+    console.log('Successfully seeded initial segment bookings demonstrating seat reuse.');
+  } else {
+    console.log('Demo bookings already seeded.');
   }
-
-  if (seatA2) {
-    // Passenger 3: Colombo Fort (seq 1) -> Nanu Oya (seq 11) on Seat A-02
-    await prisma.booking.create({
-      data: {
-        pnr: 'SLR-DEMO-03',
-        seatId: seatA2.id,
-        date: today,
-        startStationSeq: 1,
-        endStationSeq: 11,
-        startStationId: createdStations.find(s => s.sequenceNumber === 1)?.id,
-        endStationId: createdStations.find(s => s.sequenceNumber === 11)?.id,
-        status: BookingStatus.CONFIRMED,
-        guestName: 'Sunil Shantha',
-        guestNic: '881029482V',
-        guestMobile: '+94701122334',
-        totalFare: 600.00,
-      },
-    });
-  }
-
-  console.log('Successfully seeded initial segment bookings demonstrating seat reuse.');
 
   // 4. Seed initial Ticket Checker and Admin
   const adminUsername = process.env.ADMIN_USERNAME || 'admin';
-  const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
-  const hashedAdminPassword = await bcrypt.hash(adminPassword, 10);
+  const adminExists = await prisma.user.findUnique({ where: { username: adminUsername } });
+  
+  if (!adminExists) {
+    const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+    const hashedAdminPassword = await bcrypt.hash(adminPassword, 10);
+    await prisma.user.create({
+      data: {
+        username: adminUsername,
+        password: hashedAdminPassword,
+        role: Role.ADMIN,
+      },
+    });
+    console.log(`Successfully seeded default Admin account (${adminUsername}).`);
+  } else {
+    console.log(`Admin account (${adminUsername}) already exists.`);
+  }
 
-  await prisma.user.upsert({
-    where: { username: adminUsername },
-    update: {},
-    create: {
-      username: adminUsername,
-      password: hashedAdminPassword,
-      role: Role.ADMIN,
-    },
-  });
-  console.log(`Successfully seeded default Admin account (${adminUsername}).`);
-
-  const hashedCheckerPassword = await bcrypt.hash('password123', 10);
-  await prisma.user.upsert({
-    where: { username: 'checker_1' },
-    update: {},
-    create: {
-      username: 'checker_1',
-      password: hashedCheckerPassword,
-      role: Role.TICKET_CHECKER,
-    },
-  });
-  console.log('Successfully seeded default Ticket Checker account (checker_1 / password123).');
+  const checkerExists = await prisma.user.findUnique({ where: { username: 'checker_1' } });
+  if (!checkerExists) {
+    const hashedCheckerPassword = await bcrypt.hash('password123', 10);
+    await prisma.user.create({
+      data: {
+        username: 'checker_1',
+        password: hashedCheckerPassword,
+        role: Role.TICKET_CHECKER,
+      },
+    });
+    console.log('Successfully seeded default Ticket Checker account (checker_1 / password123).');
+  } else {
+    console.log('Ticket Checker account (checker_1) already exists.');
+  }
 }
 
 main()
