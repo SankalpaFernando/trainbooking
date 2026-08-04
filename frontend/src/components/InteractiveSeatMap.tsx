@@ -159,7 +159,7 @@ export const InteractiveSeatMap: React.FC<InteractiveSeatMapProps> = ({
                 padding: '10px 16px',
                 borderRadius: '12px',
                 border: isSelected ? '2px solid var(--accent-cyan)' : '1px solid var(--glass-border)',
-                background: isSelected ? 'rgba(0, 242, 254, 0.12)' : 'rgba(15, 23, 42, 0.6)',
+                background: isSelected ? 'rgba(0, 242, 254, 0.12)' : '#fff',
                 color: isSelected ? '#ffffff' : 'var(--text-muted)',
                 cursor: 'pointer',
                 textAlign: 'left',
@@ -171,7 +171,7 @@ export const InteractiveSeatMap: React.FC<InteractiveSeatMapProps> = ({
                 {c.name}
               </div>
               <div style={{ fontSize: '0.75rem', marginTop: '2px', display: 'flex', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
-                <span>{c.classType.replace('_', ' ')}</span>
+                <span style={{ color: 'var(--text-muted)' }}>{c.classType.replace('_', ' ')}</span>
                 <span style={{ color: 'var(--text-muted)' }}>
                   {getCoachFare(c.classType, c.id) !== null ? `LKR ${getCoachFare(c.classType, c.id)?.toFixed(2)}` : 'Loading price...'}
                 </span>
@@ -192,7 +192,7 @@ export const InteractiveSeatMap: React.FC<InteractiveSeatMapProps> = ({
         <div style={{
           padding: '16px',
           borderRadius: '12px',
-          background: 'rgba(244, 63, 94, 0.1)',
+          background: 'rgba(244, 63, 93, 0.1)',
           border: '1px solid rgba(244, 63, 94, 0.3)',
           marginBottom: '20px',
           display: 'flex',
@@ -228,7 +228,7 @@ export const InteractiveSeatMap: React.FC<InteractiveSeatMapProps> = ({
             🚂 Locomotive Front (Facing Badulla Direction)
           </span>
           <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--accent-teal)' }}>
-            {activeCoach?.name} ({activeCoach?.classType})
+            {activeCoach?.name} ({activeCoach?.classType.split('_').join(' ')})
           </span>
         </div>
 

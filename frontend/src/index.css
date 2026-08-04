@@ -193,7 +193,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .seat-occupied {
-  background: rgba(244, 63, 94, 0.12);
+  background: rgba(244, 63, 93, 0.12);
   color: #f87171;
   border-color: rgba(244, 63, 94, 0.3);
   cursor: not-allowed;
