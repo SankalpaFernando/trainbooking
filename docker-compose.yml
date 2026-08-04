@@ -62,6 +62,7 @@ services:
     container_name: train_booking_frontend
     environment:
       NODE_ENV: development
+      VITE_RECAPTCHA_SITE_KEY: ${VITE_RECAPTCHA_SITE_KEY}
     working_dir: /app
     ports:
       - "5173:5173"
@@ -72,6 +73,7 @@ services:
     command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5173"
     depends_on:
       - backend
+
 
   prometheus:
     image: prom/prometheus:latest

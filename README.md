@@ -112,6 +112,22 @@ A production-grade, segment-based train seat booking platform for Sri Lanka's ic
 | **4-Tier Rate Limiting** | Redis-backed fixed-window counters: Global (100/min), Search (10/min), Booking (5/min), Login (5/5min) — with RFC 6585 response headers and fail-open design. |
 | **Google reCAPTCHA v2** | Bot protection on all booking forms with server-side token verification via Google's API. |
 
+### 🛡️ Fraud Prevention & Security
+
+| Feature | Description |
+|---|---|
+| **Anti-Blackmarket Mobile Limits** | Hard limit of maximum 2 active bookings per mobile number per day to prevent scalpers from hoarding seats and reselling them on the black market. |
+| **Strict Daily IP Rate Limiting** | Added a 5-request per day limit per IP address for booking initiation routes (`/bookings/hold`) to prevent automated mass bookings. |
+
+### ♿ Accessibility (a11y)
+
+| Feature | Description |
+|---|---|
+| **Screen Reader Support** | Implemented ARIA attributes including `aria-live="polite"` for dynamic content (fare estimates, validation results), `aria-label` for icon buttons, and structural roles (`role="dialog"`, `aria-modal="true"`). |
+| **Keyboard Navigation** | Added explicit `*:focus-visible` styling (`outline: 2px solid var(--accent-cyan)`) to ensure all interactive elements are clearly focusable without a mouse. |
+| **Semantic Forms** | Proper `<label htmlFor="...">` bindings across all inputs, including search panels and modal forms, ensuring screen readers can correctly associate inputs with their labels. |
+| **Visually Hidden Content** | Implemented `.sr-only` utility classes to provide context to screen readers without cluttering the visual UI. |
+
 ---
 
 ## Architecture Overview
@@ -927,19 +943,40 @@ The system seeds automatically with:
 
 ### Environment Variables
 
-| Variable | Default | Description |
-|---|---|---|
-| `DATABASE_URL` | `postgresql://postgres:postgres@db:5432/railway_booking` | Prisma connection string |
-| `REDIS_URL` | `redis://redis:6379` | Redis connection |
-| `PORT` | `5001` | Backend server port |
-| `BASE_FARE` | `100` | Default base fare |
-| `PER_STATION_RATE` | `50` | Default per-station rate |
-| `HOLD_TTL_SECONDS` | `300` | Seat hold expiration (seconds) |
-| `OTEL_SERVICE_NAME` | `railway-booking-backend` | OpenTelemetry service name |
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | `http://tempo:4318/v1/traces` | Trace exporter URL |
-| `LOKI_URL` | `http://loki:3100` | Log aggregation URL |
-| `NODE_ENV` | `development` | Runtime environment |
+To run the system, you **must set up** the following environment variables. You can add these to your `.env` file or export them directly in your environment.
 
+```env
+# reCAPTCHA Configuration
+RECAPTCHA_SECRET_KEY=6Lcs_nEtAAAAAPV-yOoXYP03dy2TiwwQGKjyHge3
+VITE_RECAPTCHA_SITE_KEY=vsklgmleskmglewg
+
+# Application Environment
+NODE_ENV=development
+PORT=5001
+
+# Database & Cache
+DATABASE_URL=postgresql://postgres:postgres@db:5432/railway_booking?schema=public
+REDIS_URL=redis://redis:6379
+
+# Pricing & Booking Rules
+BASE_FARE=100
+PER_STATION_RATE=50
+HOLD_TTL_SECONDS=300
+
+# Observability Stack
+OTEL_SERVICE_NAME=railway-booking-backend
+OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4318/v1/traces
+LOKI_URL=http://loki:3100
+
+# Database Initialization (for Docker Compose)
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB=railway_booking
+
+# Admin Credentials
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=admin
+```
 ---
 
 ## Testing
