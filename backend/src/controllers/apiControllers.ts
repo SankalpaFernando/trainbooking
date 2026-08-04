@@ -93,9 +93,22 @@ export class ApiControllers {
         return res.status(404).json({ success: false, error: 'Origin or Destination station not found' });
       }
 
+      // Fetch the cheapest coach pricing (third class first, then second, then first)
+      const thirdClassCoach = await prisma.coach.findFirst({
+        where: { classType: 'THIRD_CLASS' },
+        orderBy: { baseFare: 'asc' },
+      }) || await prisma.coach.findFirst({
+        orderBy: { baseFare: 'asc' },
+      });
+
       const fareEstimate = FareService.calculateFare({
         startStationSeq: startStation.sequenceNumber,
         endStationSeq: endStation.sequenceNumber,
+        pricing: thirdClassCoach ? {
+          baseFare: thirdClassCoach.baseFare,
+          ratePerStation: thirdClassCoach.ratePerStation,
+          windowSurcharge: thirdClassCoach.windowSurcharge,
+        } : undefined,
       });
 
       const seatSummaries = await SegmentService.getSeatsAvailability(
