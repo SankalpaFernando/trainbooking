@@ -347,26 +347,32 @@ export class ApiControllers {
    */
   public static async createCoach(req: Request, res: Response) {
     try {
-      const { name, type, classType, totalSeats, prefix } = req.body;
+      const { name, type, classType, rows, seatsPerRow, prefix } = req.body;
+      const parsedRows = parseInt(rows, 10);
+      const parsedSeatsPerRow = parseInt(seatsPerRow, 10);
+      const totalSeats = parsedRows * parsedSeatsPerRow;
+
       const coach = await prisma.coach.create({
         data: {
           name,
           type: type as CoachType,
           classType: classType as ClassType,
-          totalSeats: parseInt(totalSeats, 10),
+          totalSeats: totalSeats,
+          rows: parsedRows,
+          seatsPerRow: parsedSeatsPerRow,
         },
       });
 
       if (coach.type === CoachType.RESERVED) {
+        const seats = [];
         for (let i = 1; i <= coach.totalSeats; i++) {
           const numStr = i < 10 ? `0${i}` : `${i}`;
-          await prisma.seat.create({
-            data: {
-              seatNumber: `${prefix || 'X'}-${numStr}`,
-              coachId: coach.id,
-            },
+          seats.push({
+            seatNumber: `${prefix || 'X'}-${numStr}`,
+            coachId: coach.id,
           });
         }
+        await prisma.seat.createMany({ data: seats });
       }
 
       return res.json({ success: true, data: coach });
