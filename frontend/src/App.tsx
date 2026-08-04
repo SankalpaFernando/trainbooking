@@ -31,6 +31,7 @@ export const App: React.FC = () => {
   const [availability, setAvailability] = useState<AvailabilityResponseData | null>(null);
   const [mixedTickets, setMixedTickets] = useState<MixedTicketRecommendation[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const [bookingLimits, setBookingLimits] = useState<{ start?: string; end?: string }>({});
 
   // Selection & Modal states
@@ -89,6 +90,7 @@ export const App: React.FC = () => {
       return;
     }
     setLoading(true);
+    setSearchError(null);
     setSelectedSeats([]);
     try {
       const [availData, mixedData] = await Promise.all([
@@ -99,6 +101,7 @@ export const App: React.FC = () => {
       setMixedTickets(mixedData);
     } catch (e: any) {
       console.error('Error fetching seat availability:', e);
+      setSearchError(e.message || 'Failed to fetch seats');
     } finally {
       setLoading(false);
     }
@@ -110,6 +113,7 @@ export const App: React.FC = () => {
     setAvailability(null);
     setMixedTickets([]);
     setSelectedSeats([]);
+    setSearchError(null);
   };
 
   const handleSetDestinationId = (id: number) => {
@@ -117,6 +121,7 @@ export const App: React.FC = () => {
     setAvailability(null);
     setMixedTickets([]);
     setSelectedSeats([]);
+    setSearchError(null);
   };
 
   const handleSetDate = (d: string) => {
@@ -124,6 +129,7 @@ export const App: React.FC = () => {
     setAvailability(null);
     setMixedTickets([]);
     setSelectedSeats([]);
+    setSearchError(null);
   };
 
   // Swap origin and destination
@@ -134,6 +140,7 @@ export const App: React.FC = () => {
     setAvailability(null);
     setMixedTickets([]);
     setSelectedSeats([]);
+    setSearchError(null);
   };
 
 
@@ -216,6 +223,15 @@ export const App: React.FC = () => {
             minDate={bookingLimits.start}
             maxDate={bookingLimits.end}
           />
+
+          {searchError && (
+            <div className="glass-card" style={{ padding: '24px', textAlign: 'center', marginBottom: '24px', border: '1px solid rgba(244, 63, 94, 0.4)' }}>
+              <div style={{ color: 'var(--accent-rose)', fontSize: '1.2rem', fontWeight: 600, marginBottom: '8px' }}>
+                Oops! Something went wrong
+              </div>
+              <p style={{ color: 'var(--text-muted)' }}>{searchError}</p>
+            </div>
+          )}
 
           {/* Interactive Seat Map */}
           {availability && (

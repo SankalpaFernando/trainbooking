@@ -599,7 +599,7 @@ export class ApiControllers {
   public static async getSettings(req: Request, res: Response) {
     try {
       const settings = await prisma.systemSetting.findMany();
-      const settingsMap = settings.reduce((acc, curr) => {
+      const settingsMap = settings.reduce((acc: any, curr: any) => {
         acc[curr.key] = curr.value;
         return acc;
       }, {} as Record<string, string>);
@@ -631,7 +631,7 @@ export class ApiControllers {
 
       // Fetch the updated settings to return
       const updatedSettings = await prisma.systemSetting.findMany();
-      const settingsMap = updatedSettings.reduce((acc, curr) => {
+      const settingsMap = updatedSettings.reduce((acc: any, curr: any) => {
         acc[curr.key] = curr.value;
         return acc;
       }, {} as Record<string, string>);
