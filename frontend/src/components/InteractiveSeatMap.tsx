@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Coach, SeatGapSummary, Station, FareEstimate } from '../types';
-import { Armchair, Info, CheckCircle2, AlertTriangle, XCircle, Sparkles } from 'lucide-react';
-
+import { Armchair, Info, CheckCircle2, AlertTriangle, XCircle, Sparkles, Camera, Mountain, Map } from 'lucide-react';
+import { getScenicRecommendations } from '../utils/scenicRoutes';
 interface InteractiveSeatMapProps {
   coaches: Coach[];
   seats: SeatGapSummary[];
@@ -51,6 +51,10 @@ export const InteractiveSeatMap: React.FC<InteractiveSeatMapProps> = ({
 
   const originStation = stations.find((s) => s.id === originId);
   const destStation = stations.find((s) => s.id === destinationId);
+
+  const scenicRec = originStation && destStation 
+    ? getScenicRecommendations(originStation.sequenceNumber, destStation.sequenceNumber)
+    : null;
 
   const getClassMultiplier = (classType: Coach['classType']) => {
     switch (classType) {
@@ -143,6 +147,56 @@ export const InteractiveSeatMap: React.FC<InteractiveSeatMapProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Scenic Route Recommendation */}
+      {scenicRec && scenicRec.attractions.length > 0 && (
+        <div style={{
+          background: 'var(--overlay-bg)',
+          border: '1px solid var(--accent-cyan)',
+          borderRadius: '12px',
+          padding: '16px',
+          marginBottom: '20px',
+          display: 'flex',
+          gap: '16px',
+          alignItems: 'flex-start'
+        }}>
+          <div style={{
+            background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-cyan))',
+            padding: '10px',
+            borderRadius: '10px',
+            color: '#fff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0
+          }}>
+            <Mountain size={24} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--accent-cyan)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+              <Camera size={16} /> Scenic Route Highlight
+            </h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-main)', marginBottom: '10px', lineHeight: 1.5 }}>
+              For the best views on this journey, we recommend booking window seats on the 
+              <strong style={{ color: 'var(--accent-teal)', fontSize: '0.9rem', margin: '0 4px', textTransform: 'uppercase' }}>
+                {scenicRec.bestSide === 'BOTH' ? 'Left or Right' : scenicRec.bestSide} side
+              </strong> 
+              of the train.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {scenicRec.attractions.map((attr, idx) => (
+                <div key={idx} style={{ fontSize: '0.8rem', display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
+                  <Map size={14} color="var(--text-dim)" style={{ marginTop: '2px', flexShrink: 0 }} />
+                  <div>
+                    <strong style={{ color: 'var(--text-main)' }}>{attr.name}</strong>
+                    <span style={{ color: 'var(--text-muted)' }}> - {attr.description}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Coach Selection Selector */}
       <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '8px', marginBottom: '20px' }}>
