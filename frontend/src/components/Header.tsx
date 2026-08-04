@@ -1,5 +1,5 @@
 import React from 'react';
-import { Train, ShieldCheck, BarChart3, Ticket, ScanLine, Sun, Moon } from 'lucide-react';
+import { Train, ShieldCheck, BarChart3, Ticket, ScanLine, Sun, Moon, Lock } from 'lucide-react';
 
 interface HeaderProps {
   activeTab: 'booking' | 'admin' | 'my-tickets' | 'checker' | 'login';
