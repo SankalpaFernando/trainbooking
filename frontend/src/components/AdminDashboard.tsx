@@ -225,19 +225,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ date }) => {
             <h4 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: '14px', color: 'var(--accent-cyan)' }}>Configure New Coach</h4>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', marginBottom: '16px' }}>
               <div>
-                <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Coach Name</label>
-                <input type="text" required placeholder="e.g. Coach I - Observation" className="input-field" value={coachName} onChange={(e) => setCoachName(e.target.value)} />
+                <label htmlFor="coachName" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Coach Name</label>
+                <input id="coachName" type="text" required placeholder="e.g. Coach I - Observation" className="input-field" value={coachName} onChange={(e) => setCoachName(e.target.value)} />
               </div>
               <div>
-                <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Type</label>
-                <select className="input-field" value={coachType} onChange={(e: any) => setCoachType(e.target.value)}>
+                <label htmlFor="coachType" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Type</label>
+                <select id="coachType" className="input-field" value={coachType} onChange={(e: any) => setCoachType(e.target.value)}>
                   <option value="RESERVED">RESERVED</option>
                   <option value="UNRESERVED">UNRESERVED</option>
                 </select>
               </div>
               <div>
-                <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Class</label>
-                <select className="input-field" value={classType} onChange={(e: any) => setClassType(e.target.value)}>
+                <label htmlFor="classType" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Class</label>
+                <select id="classType" className="input-field" value={classType} onChange={(e: any) => setClassType(e.target.value)}>
                   <option value="FIRST_CLASS">FIRST CLASS</option>
                   <option value="SECOND_CLASS">SECOND CLASS</option>
                   <option value="THIRD_CLASS">THIRD CLASS</option>
@@ -246,18 +246,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ date }) => {
               {coachType === 'RESERVED' && (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                   <div className="input-group">
-                    <label className="input-label">Number of Rows</label>
-                    <input type="number" required min={1} max={20} className="input-field" value={rows} onChange={(e) => setRows(parseInt(e.target.value, 10) || 1)} />
+                    <label htmlFor="rows" className="input-label">Number of Rows</label>
+                    <input id="rows" type="number" required min={1} max={20} className="input-field" value={rows} onChange={(e) => setRows(parseInt(e.target.value, 10) || 1)} />
                   </div>
                   <div className="input-group">
-                    <label className="input-label">Seats Per Row</label>
-                    <input type="number" required min={1} max={10} className="input-field" value={seatsPerRow} onChange={(e) => setSeatsPerRow(parseInt(e.target.value, 10) || 1)} />
+                    <label htmlFor="seatsPerRow" className="input-label">Seats Per Row</label>
+                    <input id="seatsPerRow" type="number" required min={1} max={10} className="input-field" value={seatsPerRow} onChange={(e) => setSeatsPerRow(parseInt(e.target.value, 10) || 1)} />
                   </div>
                 </div>
               )}
               <div>
-                <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Seat Prefix</label>
-                <input type="text" required placeholder="e.g. I" className="input-field" value={prefix} onChange={(e) => setPrefix(e.target.value)} />
+                <label htmlFor="seatPrefix" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Seat Prefix</label>
+                <input id="seatPrefix" type="text" required placeholder="e.g. I" className="input-field" value={prefix} onChange={(e) => setPrefix(e.target.value)} />
               </div>
             </div>
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
@@ -303,13 +303,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ date }) => {
                   {editingCoachId === coach.id ? (
                     <>
                       <td style={{ padding: '8px' }}>
-                        <input type="number" className="input-field" style={{ width: '90px', padding: '6px' }} value={editPricing.baseFare} onChange={(e) => setEditPricing({ ...editPricing, baseFare: parseFloat(e.target.value) })} />
+                        <input aria-label="Base Fare" type="number" className="input-field" style={{ width: '90px', padding: '6px' }} value={editPricing.baseFare} onChange={(e) => setEditPricing({ ...editPricing, baseFare: parseFloat(e.target.value) })} />
                       </td>
                       <td style={{ padding: '8px' }}>
-                        <input type="number" className="input-field" style={{ width: '90px', padding: '6px' }} value={editPricing.ratePerStation} onChange={(e) => setEditPricing({ ...editPricing, ratePerStation: parseFloat(e.target.value) })} />
+                        <input aria-label="Rate Per Station" type="number" className="input-field" style={{ width: '90px', padding: '6px' }} value={editPricing.ratePerStation} onChange={(e) => setEditPricing({ ...editPricing, ratePerStation: parseFloat(e.target.value) })} />
                       </td>
                       <td style={{ padding: '8px' }}>
-                        <input type="number" className="input-field" style={{ width: '90px', padding: '6px' }} value={editPricing.windowSurcharge} onChange={(e) => setEditPricing({ ...editPricing, windowSurcharge: parseFloat(e.target.value) })} />
+                        <input aria-label="Window Surcharge" type="number" className="input-field" style={{ width: '90px', padding: '6px' }} value={editPricing.windowSurcharge} onChange={(e) => setEditPricing({ ...editPricing, windowSurcharge: parseFloat(e.target.value) })} />
                       </td>
                       <td style={{ padding: '8px', display: 'flex', gap: '8px' }}>
                         <button className="btn-primary" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={async () => {
@@ -378,12 +378,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ date }) => {
           }
         }} style={{ display: 'flex', gap: '16px', alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: '24px' }}>
           <div>
-            <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Username</label>
-            <input type="text" required className="input-field" value={checkerUser} onChange={e => setCheckerUser(e.target.value)} />
+            <label htmlFor="checkerUser" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Username</label>
+            <input id="checkerUser" type="text" required className="input-field" value={checkerUser} onChange={e => setCheckerUser(e.target.value)} />
           </div>
           <div>
-            <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Password</label>
-            <input type="password" required className="input-field" value={checkerPass} onChange={e => setCheckerPass(e.target.value)} />
+            <label htmlFor="checkerPass" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Password</label>
+            <input id="checkerPass" type="password" required className="input-field" value={checkerPass} onChange={e => setCheckerPass(e.target.value)} />
           </div>
           <button type="submit" className="btn-primary">Create Account</button>
         </form>
@@ -467,10 +467,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ date }) => {
 
         <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
           <div style={{ flex: 1, minWidth: '200px' }}>
-            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
+            <label htmlFor="bookingWindowDays" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
               Booking Window (Days)
             </label>
             <input
+              id="bookingWindowDays"
               type="number"
               min="1"
               max="365"

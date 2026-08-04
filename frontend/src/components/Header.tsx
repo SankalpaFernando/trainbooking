@@ -84,6 +84,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, theme, 
             className="btn-secondary"
             style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             title={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
+            aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
           >
             {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
           </button>

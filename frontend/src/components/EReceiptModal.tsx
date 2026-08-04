@@ -32,11 +32,12 @@ export const EReceiptModal: React.FC<EReceiptModalProps> = ({ bookings, onClose 
       zIndex: 110,
       padding: '20px',
     }}>
-      <div className="glass-card" style={{ maxWidth: '580px', width: '100%', padding: '32px', position: 'relative', background: 'var(--bg-secondary)' }}>
+      <div className="glass-card" role="dialog" aria-modal="true" aria-labelledby="ereceipt-modal-title" style={{ maxWidth: '580px', width: '100%', padding: '32px', position: 'relative', background: 'var(--bg-secondary)' }}>
         
         {/* Close Button */}
         <button
           onClick={onClose}
+          aria-label="Close e-receipt modal"
           style={{
             position: 'absolute',
             top: '20px',
@@ -58,7 +59,7 @@ export const EReceiptModal: React.FC<EReceiptModalProps> = ({ bookings, onClose 
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <Train size={28} color="var(--accent-cyan)" />
               <div>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--accent-cyan)' }}>
+                <h3 id="ereceipt-modal-title" style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--accent-cyan)' }}>
                   SRI LANKA RAILWAYS
                 </h3>
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Official Reserved Segment Seat E-Ticket</span>

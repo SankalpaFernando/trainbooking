@@ -51,11 +51,12 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
         
         {/* Origin Station Dropdown */}
         <div>
-          <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
+          <label htmlFor="originStation" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
             <MapPin size={14} style={{ display: 'inline', marginRight: '4px' }} />
             Origin Station
           </label>
           <select
+            id="originStation"
             className="input-field"
             value={originId}
             onChange={(e) => setOriginId(parseInt(e.target.value, 10))}
@@ -74,6 +75,7 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
             type="button"
             onClick={onSwapStations}
             title="Swap origin and destination"
+            aria-label="Swap origin and destination"
             style={{
               background: 'rgba(0, 242, 254, 0.1)',
               border: '1px solid rgba(0, 242, 254, 0.3)',
@@ -96,11 +98,12 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
 
         {/* Destination Station Dropdown */}
         <div>
-          <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
+          <label htmlFor="destinationStation" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
             <MapPin size={14} style={{ display: 'inline', marginRight: '4px' }} />
             Destination Station
           </label>
           <select
+            id="destinationStation"
             className="input-field"
             value={destinationId}
             onChange={(e) => setDestinationId(parseInt(e.target.value, 10))}
@@ -115,11 +118,12 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
 
         {/* Travel Date Selector */}
         <div>
-          <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
+          <label htmlFor="travelDate" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
             <Calendar size={14} style={{ display: 'inline', marginRight: '4px' }} />
             Travel Date
           </label>
           <input
+            id="travelDate"
             type="date"
             className="input-field"
             value={date}
@@ -140,7 +144,7 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
 
       {/* Journey Stats & Estimated Fare */}
       {fareEstimate && (
-        <div style={{
+        <div aria-live="polite" style={{
           marginTop: '20px',
           padding: '14px 18px',
           background: 'rgba(0, 242, 254, 0.05)',

@@ -90,6 +90,7 @@ export const TicketCheckerPortal: React.FC = () => {
           </div>
           <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <input
+              aria-label="Username"
               type="text"
               placeholder="Username"
               className="input-field"
@@ -98,6 +99,7 @@ export const TicketCheckerPortal: React.FC = () => {
               required
             />
             <input
+              aria-label="Password"
               type="password"
               placeholder="Password"
               className="input-field"
@@ -105,7 +107,7 @@ export const TicketCheckerPortal: React.FC = () => {
               onChange={(e) => setLoginPass(e.target.value)}
               required
             />
-            {loginError && <div style={{ color: 'var(--accent-rose)', fontSize: '0.85rem' }}>{loginError}</div>}
+            {loginError && <div aria-live="polite" style={{ color: 'var(--accent-rose)', fontSize: '0.85rem' }}>{loginError}</div>}
             <button type="submit" className="btn-primary" style={{ justifyContent: 'center' }}>Login</button>
           </form>
         </div>
@@ -137,6 +139,7 @@ export const TicketCheckerPortal: React.FC = () => {
           
           <form onSubmit={onManualSubmit} style={{ display: 'flex', gap: '10px' }}>
             <input
+              aria-label="Enter PNR manually"
               type="text"
               placeholder="Enter PNR manually"
               className="input-field"
@@ -148,7 +151,7 @@ export const TicketCheckerPortal: React.FC = () => {
         </div>
 
         {/* Result Section */}
-        <div className="glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column' }}>
+        <div aria-live="polite" className="glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column' }}>
           <h3 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '16px' }}>Validation Result</h3>
           
           {scanError && (

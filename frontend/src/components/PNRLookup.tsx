@@ -41,6 +41,7 @@ export const PNRLookup: React.FC = () => {
 
       <form onSubmit={handleSearch} style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
         <input
+          aria-label="Enter PNR"
           type="text"
           required
           placeholder="Enter PNR (e.g. SLR-DEMO-01)"
@@ -55,14 +56,15 @@ export const PNRLookup: React.FC = () => {
         </button>
       </form>
 
-      {error && (
-        <div style={{ padding: '14px', borderRadius: '10px', background: 'rgba(244, 63, 94, 0.15)', border: '1px solid rgba(244, 63, 94, 0.4)', color: '#f87171', fontSize: '0.88rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <AlertCircle size={18} />
-          {error}
-        </div>
-      )}
+      <div aria-live="polite">
+        {error && (
+          <div style={{ padding: '14px', borderRadius: '10px', background: 'rgba(244, 63, 94, 0.15)', border: '1px solid rgba(244, 63, 94, 0.4)', color: '#f87171', fontSize: '0.88rem', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+            <AlertCircle size={18} />
+            {error}
+          </div>
+        )}
 
-      {booking && (
+        {booking && (
         <div style={{ background: 'var(--overlay-bg)', borderRadius: '14px', padding: '20px', border: '1px solid var(--glass-border)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: '1px solid var(--glass-border)', paddingBottom: '10px' }}>
             <span className="badge badge-available">VALID RESERVATION</span>
@@ -94,6 +96,7 @@ export const PNRLookup: React.FC = () => {
           </button>
         </div>
       )}
+      </div>
 
       {showReceiptModal && booking && (
         <EReceiptModal bookings={[booking]} onClose={() => setShowReceiptModal(false)} />

@@ -73,10 +73,11 @@ export const WaitlistModal: React.FC<WaitlistModalProps> = ({
       zIndex: 100,
       padding: '20px',
     }}>
-      <div className="glass-card" style={{ maxWidth: '480px', width: '100%', padding: '28px', position: 'relative' }}>
+      <div className="glass-card" role="dialog" aria-modal="true" aria-labelledby="waitlist-modal-title" style={{ maxWidth: '480px', width: '100%', padding: '28px', position: 'relative' }}>
         
         <button
           onClick={onClose}
+          aria-label="Close waitlist modal"
           style={{
             position: 'absolute',
             top: '20px',
@@ -90,7 +91,7 @@ export const WaitlistModal: React.FC<WaitlistModalProps> = ({
           <X size={22} />
         </button>
 
-        <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--accent-amber)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+        <h2 id="waitlist-modal-title" style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--accent-amber)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
           <Clock size={22} />
           Segment Waitlist Registration
         </h2>
@@ -119,10 +120,11 @@ export const WaitlistModal: React.FC<WaitlistModalProps> = ({
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px' }}>
               <div>
-                <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
+                <label htmlFor="guestName" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
                   Full Name
                 </label>
                 <input
+                  id="guestName"
                   type="text"
                   required
                   placeholder="e.g. Ruwan Silva"
@@ -133,10 +135,11 @@ export const WaitlistModal: React.FC<WaitlistModalProps> = ({
               </div>
 
               <div>
-                <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
+                <label htmlFor="guestNic" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
                   NIC Number
                 </label>
                 <input
+                  id="guestNic"
                   type="text"
                   required
                   placeholder="e.g. 910284910V"
@@ -147,10 +150,11 @@ export const WaitlistModal: React.FC<WaitlistModalProps> = ({
               </div>
 
               <div>
-                <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
+                <label htmlFor="guestMobile" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
                   Mobile Phone Number
                 </label>
                 <input
+                  id="guestMobile"
                   type="tel"
                   required
                   placeholder="e.g. +94771122334"

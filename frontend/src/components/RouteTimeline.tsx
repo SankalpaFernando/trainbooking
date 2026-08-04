@@ -120,8 +120,13 @@ export const RouteTimeline: React.FC<RouteTimelineProps> = ({ stations, originId
                 }}>
                   {nextAttraction && (
                     <div 
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`View photo of ${nextAttraction.name}`}
                       onMouseEnter={(e) => setHoverInfo({ attr: nextAttraction!, rect: e.currentTarget.getBoundingClientRect() })}
                       onMouseLeave={() => setHoverInfo(null)}
+                      onFocus={(e) => setHoverInfo({ attr: nextAttraction!, rect: e.currentTarget.getBoundingClientRect() })}
+                      onBlur={() => setHoverInfo(null)}
                       style={{
                         position: 'relative',
                         width: '28px',

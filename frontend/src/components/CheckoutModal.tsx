@@ -142,11 +142,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       zIndex: 100,
       padding: '20px',
     }}>
-      <div className="glass-card" style={{ maxWidth: '520px', width: '100%', padding: '28px', position: 'relative' }}>
+      <div className="glass-card" role="dialog" aria-modal="true" aria-labelledby="checkout-modal-title" style={{ maxWidth: '520px', width: '100%', padding: '28px', position: 'relative' }}>
         
         {/* Close button */}
         <button
           onClick={onClose}
+          aria-label="Close dialog"
           style={{
             position: 'absolute',
             top: '20px',
@@ -160,7 +161,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           <X size={22} />
         </button>
 
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '6px', color: 'var(--accent-cyan)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <h2 id="checkout-modal-title" style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '6px', color: 'var(--accent-cyan)', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <ShieldCheck size={24} />
           Express Guest Checkout
         </h2>
@@ -225,11 +226,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             {/* Passenger Input Fields */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '24px' }}>
               <div>
-                <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
+                <label htmlFor="guestName" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
                   <User size={14} style={{ display: 'inline', marginRight: '4px' }} />
                   Full Passenger Name
                 </label>
                 <input
+                  id="guestName"
                   type="text"
                   required
                   placeholder="e.g. Kasun Fernando"
@@ -240,11 +242,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               </div>
 
               <div>
-                <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
+                <label htmlFor="guestNic" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
                   <ShieldCheck size={14} style={{ display: 'inline', marginRight: '4px' }} />
                   NIC Number or Passport ID
                 </label>
                 <input
+                  id="guestNic"
                   type="text"
                   required
                   placeholder="e.g. 921840291V"
@@ -255,11 +258,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               </div>
 
               <div>
-                <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
+                <label htmlFor="guestMobile" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
                   <Phone size={14} style={{ display: 'inline', marginRight: '4px' }} />
                   Mobile Number (SMS Receipt)
                 </label>
                 <input
+                  id="guestMobile"
                   type="tel"
                   required
                   placeholder="e.g. +94771234567"
